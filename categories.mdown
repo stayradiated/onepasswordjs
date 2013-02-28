@@ -1,0 +1,60 @@
+# Categories
+
+## Overview Information
+
+### 001 - Login
+    "ainfo": "username",
+    "url": "agilebits.com",
+    "URLs": [
+      {
+        "l": "website",
+        "u": "agilebits.com"
+      }
+    ]
+
+### 002 - Credit Card
+    "ainfo": "0000 ******** 3333"
+
+### 003 - Secure Note
+    "ainfo": "Secure Notes"
+
+### 004 - Identity
+    "ainfo": "First Name Last Name"
+
+---
+
+### 100 - Software License
+    "ainfo": "Version Number"
+
+### 101 - Bank Account
+    "ainfo": "Bank Name"
+
+### 102 - Database
+    "ainfo": "Server"
+
+### 103 - Driver's License
+    "ainfo": "Number"
+
+### 104 - Outdoor License
+    "ainfo": "Full Name"
+
+### 105 - Membership
+    "ainfo": "Member Name"
+
+### 106 - Passport
+    "ainfo": "Number"
+
+### 107 - Reward Program
+    "ainfo": "Company Name"
+
+### 108 - Social Security Number
+    "ainfo": "Name"
+
+### 109 - Wireless Router
+    "ainfo": "Network Name"
+
+### 110 - Server
+    "ainfo": "Username"
+
+### 111 - Email Account
+    "ainfo": "Username"
