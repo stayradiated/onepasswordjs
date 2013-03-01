@@ -93,9 +93,18 @@ class Keychain
     @profileName = 'default'
     @_events = {}
     @items = {}
-    if attrs?
-      for key, attr of attrs
-        @[key] = attr
+    if attrs then @loadAttrs(attrs)
+
+
+  ###*
+   * Easy way to load data into a keychain
+   * @param {Object} attrs The attributes you want to load
+   * @return {this}
+  ###
+  loadAttrs: (attrs) ->
+    for key, attr of attrs
+      @[key] = attr
+    return this
 
 
   ###*
@@ -221,18 +230,19 @@ class Keychain
     profile = profile[PROFILE_PREFIX.length...-PROFILE_SUFFIX.length]
     profile = JSON.parse(profile)
 
-    @lastUpdatedBy = profile.lastUpdatedBy
-    @updatedAt = profile.updatedAt
-    @profileName = profile.profileName
-    @passwordHint = profile.passwordHint
-    @uuid = profile.uuid
-    @createdAt = profile.createdAt
-    @iterations = profile.iterations
-    @salt = Crypto.fromBase64(profile.salt)
+    @loadAttrs
+      uuid: profile.uuid
+      salt: Crypto.fromBase64(profile.salt)
+      createdAt: profile.createdAt
+      updatedAt: profile.updatedAt
+      iterations: profile.iterations
+      profileName: profile.profileName
+      passwordHint: profile.passwordHint
+      lastUpdatedBy: profile.lastUpdatedBy
 
     @encrypted =
-      masterKey:  Crypto.fromBase64(profile.masterKey)
-      overviewKey:  Crypto.fromBase64(profile.overviewKey)
+      masterKey: Crypto.fromBase64(profile.masterKey)
+      overviewKey: Crypto.fromBase64(profile.overviewKey)
 
     return this
 
@@ -292,22 +302,26 @@ class Keychain
 
     # Decrypt profile keys
     master = profileKey.decrypt('profileKey', @encrypted.masterKey)
-    return false unless master.length
+    if not master.length
+      console.error "Could not decrypt master key"
+      return false
+
     overview = profileKey.decrypt('profileKey', @encrypted.overviewKey)
-    return false unless overview.length
-    @master =
-      encryption: Crypto.toBuffer(master[0])
-      hmac: Crypto.toBuffer(master[1])
-    @overview =
-      encryption: Crypto.toBuffer(overview[0])
-      hmac: Crypto.toBuffer(overview[1])
+    if not overview.length
+      console.error "Could not decrypt overview key"
+      return false
+
+    @master = new Opdata(master[0], master[1])
+    @overview = new Opdata(overview[0], overview[1])
 
     # Decrypt overview data
-    overviewKey = new Opdata(@overview.encryption, @overview.hmac)
-    @eachItem (item) ->
-      item.decryptOverview(overviewKey)
+    @eachItem (item) =>
+      item.decryptOverview(@overview)
 
-    @profileIsUnlocked = true
+    @unlocked = true
+
+    @rescheduleAutoLock()
+    setTimeout (=> @_autolock()), 1000
 
     return this
 
@@ -318,16 +332,12 @@ class Keychain
    * @param {Boolean} autolock Whether the keychain was locked automatically.
   ###
   lock: (autolock) ->
-
-    @_trigger 'autolock', autolock
-
-    # Discard keys
+    @_trigger 'lock', autolock
     @super = undefined
     @master = undefined
     @overview = undefined
-
-    # Discard items
     @items = {}
+    @unlocked = false
 
 
   ###*
@@ -337,7 +347,7 @@ class Keychain
    * they are using it.
   ###
   rescheduleAutoLock: ->
-    @autoLockTime = Date.now() + AUTOLOCK_LENGTH
+    @autoLockTime = Date.now() + @AUTOLOCK_LENGTH
 
 
   ###*
@@ -345,7 +355,8 @@ class Keychain
    * has it then locks the keychain.
    * @private
   ###
-  _autolock: ->
+  _autolock: =>
+    return unless @unlocked
     now = Date.now()
     if now < @autoLockTime
       setTimeout @_autolock, 1000
@@ -371,8 +382,7 @@ class Keychain
   ###
   decryptItem: (uuid) ->
     item = @getItem(uuid)
-    masterKey = new Opdata(@master.encryption, @master.hmac)
-    item.decryptDetails(masterKey)
+    item.decryptDetails(@master)
 
 
   ###*

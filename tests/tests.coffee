@@ -19,3 +19,11 @@ describe 'Keychain', ->
   it 'should decrypt an item', ->
     uuid = Object.keys(keychain.items)[0]
     details = keychain.decryptItem(uuid)
+
+  it 'should lock the keychain', ->
+    keychain.lock()
+    assert.equal keychain.super, undefined
+    assert.equal keychain.master, undefined
+    assert.equal keychain.overview, undefined
+    assert.deepEqual keychain.items, {}
+

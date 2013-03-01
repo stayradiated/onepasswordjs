@@ -96,7 +96,7 @@ class Item
       if data[key]? then @[key] = data[key]
 
     for key in ['d', 'hmac', 'k', 'o']
-      continue unless data[key]
+      continue unless data[key]?
       @[key] = Crypto.fromBase64(data[key])
 
     return this
@@ -196,6 +196,13 @@ class Item
     @overview.title.toLowerCase().match(query)
 
 
-class Login extends Item
+class Note extends Item
+  category: "003"
+
+  set: (data) ->
+    @details.notesPlain = data
+    @overview.notesPlain = data[0..79]
+
+
 
 module.exports = Item
