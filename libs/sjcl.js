@@ -43,3 +43,42 @@ c,true);var f;c=b.adata;if(typeof b.salt==="string")b.salt=sjcl.codec.base64.toB
 sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:throw new sjcl.exception.bug("json encode: unsupported type");}}return c+"}"},decode:function(a){a=a.replace(/\s/g,"");if(!a.match(/^\{.*\}$/))throw new sjcl.exception.invalid("json decode: this isn't json!");a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++){if(!(d=a[c].match(/^(?:(["']?)([a-z][a-z0-9]*)\1):(?:(\d+)|"([a-z0-9+\/%*_.@=\-]*)")$/i)))throw new sjcl.exception.invalid("json decode: this isn't json!");b[d[2]]=
 d[3]?parseInt(d[3],10):d[2].match(/^(ct|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4])}return b},c:function(a,b,c){if(a===undefined)a={};if(b===undefined)return a;var d;for(d in b)if(b.hasOwnProperty(d)){if(c&&a[d]!==undefined&&a[d]!==b[d])throw new sjcl.exception.invalid("required parameter overridden");a[d]=b[d]}return a},Y:function(a,b){var c={},d;for(d in a)if(a.hasOwnProperty(d)&&a[d]!==b[d])c[d]=a[d];return c},X:function(a,b){var c={},d;for(d=0;d<b.length;d++)if(a[b[d]]!==undefined)c[b[d]]=
 a[b[d]];return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.U={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.U,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===undefined?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
+
+
+/** @fileOverview Bit array codec implementations.
+ *
+ * @author Emily Stark
+ * @author Mike Hamburg
+ * @author Dan Boneh
+ */
+
+/** @namespace Arrays of bytes */
+sjcl.codec.bytes = {
+  /** Convert from a bitArray to an array of bytes. */
+  fromBits: function (arr) {
+    var out = [], bl = sjcl.bitArray.bitLength(arr), i, tmp;
+    for (i=0; i<bl/8; i++) {
+      if ((i&3) === 0) {
+        tmp = arr[i/4];
+      }
+      out.push(tmp >>> 24);
+      tmp <<= 8;
+    }
+    return out;
+  },
+  /** Convert from an array of bytes to a bitArray. */
+  toBits: function (bytes) {
+    var out = [], i, tmp=0;
+    for (i=0; i<bytes.length; i++) {
+      tmp = tmp << 8 | bytes[i];
+      if ((i&3) === 3) {
+        out.push(tmp);
+        tmp = 0;
+      }
+    }
+    if (i&3) {
+      out.push(sjcl.bitArray.partial(8*(i&3), tmp));
+    }
+    return out;
+  }
+};

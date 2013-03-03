@@ -1,66 +1,62 @@
-nodeCrypto = require('crypto')
-global.sjcl = sjcl = require('../libs/sjcl')
-require('../libs/codecBytes')
+###*
+ * @fileOverview A collection of cryptographic functions that work in most browsers.
+###
+
+Gibberish = require('../libs/gibberish-aes')
+jsSHA = require('../libs/sha')
+sjcl = require('../libs/sjcl')
+
 
 # Constants
 BLOCKSIZE = 16
 
 
-###*
- * @class Crypto
-###
-
 Crypto =
+
 
   ###*
    * Encipher data
-   * @param {String} mode The type of encryption to use.
    * @param {Buffer} plaintext The data to encrypt.
-   * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or
-   *                            hex encoded string.
+   * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or hex encoded string.
    * @param {String|Buffer} iv The IV. Can be a Buffer or hex encoded string.
-   * @param {string} [encoding=Buffer] The format to return the encrypted
-   *                                   data at.
-   * @return {Buffer|String} The encrypted data.
+   * @param {string} [encoding=buffer] The format to return the encrypted data at.
+   * @return {String} The encrypted data.
   ###
-  encrypt: (mode, plaintext, key, iv, encoding) ->
-    iv = @toBuffer(iv)
+  encrypt: (plaintext, key, iv, encoding="buffer") ->
     key = @toBuffer(key)
-    cipher = nodeCrypto.createCipheriv(mode, key, iv)
-    # Don't use the default padding
-    cipher.setAutoPadding(false)
-    binary = cipher.update(plaintext) + cipher.final()
-    buffer = new Buffer(binary, 'binary')
-    if encoding?
-      return buffer.toString(encoding)
+    iv = @toBuffer(iv)
+    blocks = Gibberish.rawEncrypt(plaintext, key, iv)
+    base64 = Gibberish.Base64.encode(blocks, false)
+    if encoding is 'base64' then return base64
+    ciphertext = Gibberish.Base64.decode(base64)
+    if encoding is 'hex' then return Gibberish.a2h(ciphertext)
+    if encoding is 'buffer'
+      return ciphertext
     else
-      return buffer
+      throw new Error("Encoding not supported")
 
 
   ###*
    * Decipher encrypted data.
-   * @param {String} mode The type of encryption to use.
-   * @param {String|Buffer} ciphertext The data to decipher. Must be a
-   *                                   multiple of the blocksize.
+   * @param {String|Buffer} ciphertext The data to decipher. Must be a multiple of the blocksize.
    * @param {String|Buffer} key The key to decipher the data with.
    * @param {String|Buffer} iv The initialization vector to use.
-   * @param {String} [encoding=Buffer] The format to return the decrypted
-   *                                   contents as.
+   * @param {String} [encoding=buffer] The format to return the decrypted contents as.
    * @return {Buffer|String} The decrypted contents.
   ###
-  decrypt: (mode, ciphertext, key, iv, encoding) ->
+  decrypt: (ciphertext, key, iv, encoding="buffer") ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
     ciphertext = @toBuffer(ciphertext)
-    cipher = nodeCrypto.createDecipheriv(mode, key, iv)
-    # Don't use the default padding
-    cipher.setAutoPadding(false)
-    binary = cipher.update(ciphertext) + cipher.final()
-    buffer = new Buffer(binary, 'binary')
-    if encoding?
-      return buffer.toString(encoding)
+    binary = Gibberish.rawDecrypt(ciphertext, key, iv, true)
+    hex = @bin2hex(binary)
+    if encoding is 'hex' then return hex
+    bytes = Gibberish.h2a(hex)
+    if encoding is 'base64' then return Gibberish.Base64.encode(bytes)
+    if encoding is "buffer"
+      return bytes
     else
-      return buffer
+      throw new Error("Encoding now supported")
 
 
   ###*
@@ -73,20 +69,16 @@ Crypto =
   ###
   pbkdf2: (password, salt, iterations=10000, keySize=512) ->
 
-    # Users SJCL PBKDF2 with Node.js Crypto HMAC-SHA512
-    # Because Node.js Crypto PBKDF2 only supports HMAC-SHA1
-
-    shaKey = "sha#{keySize}"
+    self = this
 
     class hmac
 
       constructor: (key) ->
-        @key = sjcl.codec.utf8String.fromBits(key)
+        @key = sjcl.codec.bytes.fromBits(key)
 
       encrypt: (sjclArray) ->
         byteArray = sjcl.codec.bytes.fromBits(sjclArray)
-        buffer = new Buffer(byteArray)
-        hex = nodeCrypto.createHmac(shaKey, @key).update(buffer).digest('hex')
+        hex = self.hmac(byteArray, @key, keySize)
         bits = sjcl.codec.hex.toBits(hex)
         return bits
 
@@ -99,30 +91,28 @@ Crypto =
    * Cryptographically hash data using HMAC.
    * @param {String|Buffer} data The data to be hashed.
    * @param {String|Buffer} key The key to use with HMAC.
-   * @param {string} mode The type of hash to use, such as sha1, sha256 or
-   *                      sha512.
+   * @param {Number} [keysize=512] The keysize for the hash function.
    * @return {String} The hmac digest encoded as hex.
   ###
-  hmac: (data, key, mode) ->
-    data = @toBuffer(data)
-    key = @toBuffer(key)
-    hmac = nodeCrypto.createHmac(mode, key)
-    hmac.update(data)
-    return hmac.digest('hex')
+  hmac: (data, key, keysize=512) ->
+    data = @toHex(data)
+    key = @toHex(key)
+    mode = "SHA-#{keysize}"
+    input = new jsSHA(data, "HEX")
+    return input.getHMAC(key, "HEX", mode, "HEX")
 
 
   ###*
    * Create a hash digest of data.
    * @param {String|Buffer} data The data to hash.
-   * @param {String} mode The type of hash to use, such as sha1, sha256, or
-   *                      sha512.
+   * @param {Number} [keysize=512] The keysize for the hash function.
    * @return {String} The hash digest encoded as hex.
   ###
-  hash: (data, mode) ->
-    data = @toBuffer(data)
-    hash = nodeCrypto.createHash(mode)
-    hash.update(data)
-    return hash.digest('hex')
+  hash: (data, keysize=512) ->
+    data = @toHex(data)
+    mode = "SHA-#{keysize}"
+    input = new jsSHA(data, "HEX")
+    return input.getHash(mode, "HEX")
 
 
   ###*
@@ -133,14 +123,13 @@ Crypto =
   pad: (data) ->
     bytesToPad = BLOCKSIZE - (data.length % BLOCKSIZE)
     padding = @randomBytes(bytesToPad)
-    return Buffer.concat([padding, data])
+    return @concat([padding, data])
 
 
   ###*
    * Remove padding from text.
    * @param {Numbers} plaintextLength The length of the plaintext in bytes.
-   * @param {String|Buffer} data The data to remove the padding as a string
-   *                             encoded as hex or a buffer.
+   * @param {String|Buffer} data The data to remove the padding as a string encoded as hex or a buffer.
    * @return {String} The data with the padding removed encoded as hex.
   ###
   unpad: (plaintextLength, data) ->
@@ -156,19 +145,28 @@ Crypto =
    * @return {Buffer} The random data as a Buffer.
   ###
   randomBytes: (length) ->
-    return nodeCrypto.randomBytes(length)
+    array = new Uint8Array(length)
+    window.crypto.getRandomValues(array)
+    byte for byte in array
 
 
   ###*
    * Convert data to a Buffer
-   * @param {String|Buffer} data The data to be converted. If a string, must
-   *                             be encoded as hex.
+   * @param {String|Buffer} data The data to be converted. If a string, must be encoded as hex.
    * @param {String} [encoding=hex] The format of the data to convert.
    * @return {Buffer} The data as a Buffer
   ###
   toBuffer: (data, encoding='hex') ->
-    if data instanceof Buffer then return data
-    return new Buffer(data, encoding)
+    if Array.isArray(data) then return data
+    switch encoding
+      when 'base64'
+        return Gibberish.base64.decode(data)
+      when 'hex'
+        return Gibberish.h2a(data)
+      when 'utf8'
+        return Gibberish.s2a(data)
+      else
+        throw new Error("Encoding not supported")
 
 
   ###*
@@ -177,7 +175,8 @@ Crypto =
    * @return {String} The data encoded as hex.
   ###
   toHex: (data) ->
-    if data instanceof Buffer then return data.toString('hex')
+    if Array.isArray(data)
+      return Gibberish.a2h(data)
     return data
 
 
@@ -187,7 +186,7 @@ Crypto =
    * @return {Buffer} The base64 string as a Buffer.
   ###
   fromBase64: (data) ->
-    return new Buffer(data, 'base64')
+    Gibberish.Base64.decode(data)
 
 
   ###*
@@ -196,7 +195,7 @@ Crypto =
    * @return {Buffer} The buffers joined together.
   ###
   concat: (buffers) ->
-    Buffer.concat(buffers)
+    Array::concat.apply(buffers[0], buffers[1..])
 
 
   ###*
@@ -250,13 +249,26 @@ Crypto =
 
 
   ###*
+   * Convert a binary string into a hex string.
+   * @param {String} binary The binary encoded string.
+   * @return {String} The hex encoded string.
+  ###
+  bin2hex: (binary) ->
+    hex = ""
+    for char in binary
+      hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, "0$1")
+    return hex
+
+
+  ###*
    * Generate a uuid.
    * @param {Number} [length=32] The length of the UUID.
    * @return {String} The UUID.
   ###
   generateUuid: (length=32) ->
     length /= 2
-    return @randomBytes(length).toString('hex').toUpperCase(0)
+    bytes = @randomBytes(length)
+    hex = @toHex(bytes).toUpperCase()
 
 
 module.exports = Crypto
