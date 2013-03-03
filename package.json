@@ -1,11 +1,27 @@
 {
-    "name": "cloudkeychain"
-  , "version": "0.1.0"
-  , "description": "read and write onepassword cloudkeychain files"
-  , "keywords": ["onepassword", "cloud", "keychain"]
-  , "author": "George Czabania <george@czabania.com>"
-  , "repository": { "type": "git", "url": "" }
-  , "dependencies": { "commander": "*" }
-  , "main": "index"
-  , "engines": { "node": ">= 0.8.x" }
+  "name": "cloudkeychain",
+  "version": "0.1.0",
+  "description": "read and write onepassword cloudkeychain files",
+  "keywords": [
+    "onepassword",
+    "cloud",
+    "keychain"
+  ],
+  "author": "George Czabania <george@czabania.com>",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "commander": "*"
+  },
+  "main": "index",
+  "engines": {
+    "node": ">= 0.8.x"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-coffee": "~0.5.0",
+    "grunt-contrib-watch": "~0.3.1"
+  }
 }
