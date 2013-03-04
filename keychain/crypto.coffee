@@ -13,8 +13,7 @@ BLOCKSIZE = 16
 Crypto =
 
   ###*
-   * Encipher data
-   * @param {String} mode The type of encryption to use.
+   * Encipher data using AES256 in CBC mode
    * @param {Buffer} plaintext The data to encrypt.
    * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or
    *                            hex encoded string.
@@ -23,10 +22,10 @@ Crypto =
    *                                   data at.
    * @return {Buffer|String} The encrypted data.
   ###
-  encrypt: (mode, plaintext, key, iv, encoding) ->
+  encrypt: (plaintext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
-    cipher = nodeCrypto.createCipheriv(mode, key, iv)
+    cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
     binary = cipher.update(plaintext) + cipher.final()
@@ -38,8 +37,7 @@ Crypto =
 
 
   ###*
-   * Decipher encrypted data.
-   * @param {String} mode The type of encryption to use.
+   * Decipher encrypted data using AES256 in CBC mode
    * @param {String|Buffer} ciphertext The data to decipher. Must be a
    *                                   multiple of the blocksize.
    * @param {String|Buffer} key The key to decipher the data with.
@@ -48,11 +46,11 @@ Crypto =
    *                                   contents as.
    * @return {Buffer|String} The decrypted contents.
   ###
-  decrypt: (mode, ciphertext, key, iv, encoding) ->
+  decrypt: (ciphertext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
     ciphertext = @toBuffer(ciphertext)
-    cipher = nodeCrypto.createDecipheriv(mode, key, iv)
+    cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
     binary = cipher.update(ciphertext) + cipher.final()
@@ -68,15 +66,15 @@ Crypto =
    * @param {String} password The password.
    * @param {String|Buffer} salt The salt.
    * @param {Number} [iterations=10000] The numbers of iterations.
-   * @param {Numbers} [keySize=512] The length of the derived key in bits.
+   * @param {Numbers} [keysize=512] The length of the derived key in bits.
    * @return {String} Returns the derived key encoded as hex.
   ###
-  pbkdf2: (password, salt, iterations=10000, keySize=512) ->
+  pbkdf2: (password, salt, iterations=10000, keysize=512) ->
 
     # Users SJCL PBKDF2 with Node.js Crypto HMAC-SHA512
     # Because Node.js Crypto PBKDF2 only supports HMAC-SHA1
 
-    shaKey = "sha#{keySize}"
+    shaKey = "sha#{keysize}"
 
     class hmac
 
@@ -91,7 +89,7 @@ Crypto =
         return bits
 
     salt = sjcl.codec.hex.toBits(@toHex(salt))
-    bits = sjcl.misc.pbkdf2(password, salt, iterations, keySize, hmac)
+    bits = sjcl.misc.pbkdf2(password, salt, iterations, keysize, hmac)
     return sjcl.codec.hex.fromBits(bits)
 
 
@@ -103,9 +101,10 @@ Crypto =
    *                      sha512.
    * @return {String} The hmac digest encoded as hex.
   ###
-  hmac: (data, key, mode) ->
+  hmac: (data, key, keysize) ->
     data = @toBuffer(data)
     key = @toBuffer(key)
+    mode = "sha#{keysize}"
     hmac = nodeCrypto.createHmac(mode, key)
     hmac.update(data)
     return hmac.digest('hex')
@@ -118,8 +117,9 @@ Crypto =
    *                      sha512.
    * @return {String} The hash digest encoded as hex.
   ###
-  hash: (data, mode) ->
+  hash: (data, keysize) ->
     data = @toBuffer(data)
+    mode = "sha#{keysize}"
     hash = nodeCrypto.createHash(mode)
     hash.update(data)
     return hash.digest('hex')
@@ -246,6 +246,18 @@ Crypto =
   dec2hex: (dec) ->
     hex = dec.toString(16)
     if hex.length < 2 then hex = "0" + hex
+    return hex
+
+
+  ###*
+   * Convert a binary string into a hex string.
+   * @param {String} binary The binary encoded string.
+   * @return {String} The hex encoded string.
+  ###
+  bin2hex: (binary) ->
+    hex = ""
+    for char in binary
+      hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, "0$1")
     return hex
 
 
