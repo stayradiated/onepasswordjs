@@ -25,12 +25,26 @@ Todo:
 - Actually do something with item data (instead of just handing back the raw
 JSON)
 
+## Installation
+
+Install via NPM:
+
+    npm install 1passwordjs
+
+Then require it:
+
+    Keychain = require('1passwordjs')
+    keychain = new Keychain()
+    keychain.open('./1password.cloudkeychain')
+    keychain.unlock('password')
+
+
 ## Tests
 
 Tests are written using [Mocha](http://visionmedia.github.com/mocha/).
 To run the tests
 
-  mocha --compilers coffee:coffee-script tests
+    mocha --compilers coffee:coffee-script tests
 
 License
 -------
