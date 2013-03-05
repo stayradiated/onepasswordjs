@@ -56,8 +56,8 @@ class Keychain
       overview: Crypto.randomBytes(64)
 
     keys =
-      master: Crypto.hash(raw.master, 'sha512')
-      overview: Crypto.hash(raw.overview, 'sha512')
+      master: Crypto.hash(raw.master, 512)
+      overview: Crypto.hash(raw.overview, 512)
 
     superKey = keychain._deriveKeys(password)
 

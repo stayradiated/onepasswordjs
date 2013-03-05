@@ -25,4 +25,4 @@ describe 'Band', ->
     keychain.addItem(item)
 
   it 'should export the band files', ->
-    console.log keychain.exportBands()
+    keychain.exportBands()

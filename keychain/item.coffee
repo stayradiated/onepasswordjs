@@ -134,7 +134,7 @@ class Item
       dataToHmac += element + data
 
     dataToHmac = new Buffer(dataToHmac, 'utf8')
-    hmac = Crypto.hmac(dataToHmac, key, 'sha256')
+    hmac = Crypto.hmac(dataToHmac, key, 256)
 
     console.log hmac
     console.log @hmac.toString('hex')
@@ -176,11 +176,11 @@ class Item
   toJSON: ->
     category: @category
     created: @created
-    d: @d.toString('base64')
+    d: @d?.toString('base64')
     # folder: ""
     hmac: @hmac?.toString('base64')
-    k: @k.toString('base64')
-    o: @o.toString('base64')
+    k: @k?.toString('base64')
+    o: @o?.toString('base64')
     tx: @tx
     updated: @updated
     uuid: @uuid
