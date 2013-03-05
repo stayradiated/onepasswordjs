@@ -33,7 +33,7 @@ Install via NPM:
 
 Then require it:
 
-    Keychain = require('1passwordjs')
+    Keychain = require('1password')
     keychain = new Keychain()
     keychain.open('./1password.cloudkeychain')
     keychain.unlock('password')
