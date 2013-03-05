@@ -1,5 +1,5 @@
 assert = require 'assert'
-Opdata = require '../keychain/opdata'
+Opdata = require '../src/opdata'
 
 # Sample keys from test.cloudkeychain
 keys =

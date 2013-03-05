@@ -6,7 +6,7 @@ fs = require('fs')
 
 describe 'Keychain', ->
 
-  Keychain = require('../keychain/keychain')
+  Keychain = require('../src/keychain')
   keychain = null
 
   it 'should open a keychain file', ->

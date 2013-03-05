@@ -60,13 +60,13 @@ class Opdata
     expectedHmac = object[-64..]
 
     # Verify HMAC
-    objectHmac = Crypto.hmac(dataToHmac, @hmacKey, 'sha256')
+    objectHmac = Crypto.hmac(dataToHmac, @hmacKey, 256)
     if objectHmac isnt expectedHmac
       console.error 'Hmac does not match'
       return false
 
     # Decipher
-    rawtext = Crypto.decrypt('aes-256-cbc', ciphertext, @encryptionKey, iv, 'hex')
+    rawtext = Crypto.decrypt(ciphertext, @encryptionKey, iv, 'hex')
 
     if type isnt 'itemKey'
       plaintext = Crypto.unpad(length, rawtext)
@@ -80,7 +80,7 @@ class Opdata
         return [rawtext[0...64], rawtext[64..]]
 
       when 'profileKey'
-        keys = Crypto.hash(plaintext, 'sha512')
+        keys = Crypto.hash(plaintext, 512)
         return [keys[0...64], keys[64..]]
 
 
@@ -103,7 +103,7 @@ class Opdata
       paddedtext = Crypto.concat([iv, Crypto.pad(plaintext)])
 
     # Encrypt using AES 256 in cbc mode
-    ciphertext = Crypto.encrypt('aes-256-cbc', paddedtext, @encryptionKey, iv)
+    ciphertext = Crypto.encrypt(paddedtext, @encryptionKey, iv)
 
     # Header data
     if type is 'itemKey'
@@ -115,7 +115,7 @@ class Opdata
       dataToHmac = Crypto.concat([header, endian, iv, ciphertext])
 
     # Generate a HMAC using SHA256
-    hmac = Crypto.hmac(dataToHmac, @hmacKey, 'sha256')
+    hmac = Crypto.hmac(dataToHmac, @hmacKey, 256)
     hmac = Crypto.toBuffer(hmac)
 
     return Crypto.concat([dataToHmac, hmac])

@@ -1,6 +1,6 @@
 assert = require 'assert'
 
-Keychain = require '../keychain/keychain'
+Keychain = require '../src/keychain'
 keychain = new Keychain()
 
 describe 'Event Handler', ->

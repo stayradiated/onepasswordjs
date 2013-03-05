@@ -11,7 +11,7 @@
 program = require 'commander'
 fs = require 'fs'
 
-Keychain = require './keychain/keychain'
+Keychain = require './src/keychain'
 keychain = null
 
 program

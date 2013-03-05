@@ -4,7 +4,7 @@
 assert = require('assert')
 fs = require('fs')
 
-Keychain = require('../keychain/keychain')
+Keychain = require('../src/keychain')
 
 describe 'Band', ->
 

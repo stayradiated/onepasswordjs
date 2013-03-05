@@ -12,8 +12,7 @@ BLOCKSIZE = 16
 Crypto =
 
   ###*
-   * Encipher data
-   * @param {String} mode The type of encryption to use.
+   * Encipher data using AES256 in CBC mode
    * @param {Buffer} plaintext The data to encrypt.
    * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or
    *                            hex encoded string.
@@ -22,10 +21,10 @@ Crypto =
    *                                   data at.
    * @return {Buffer|String} The encrypted data.
   ###
-  encrypt: (mode, plaintext, key, iv, encoding) ->
+  encrypt: (plaintext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
-    cipher = nodeCrypto.createCipheriv(mode, key, iv)
+    cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
     binary = cipher.update(plaintext) + cipher.final()
@@ -37,8 +36,7 @@ Crypto =
 
 
   ###*
-   * Decipher encrypted data.
-   * @param {String} mode The type of encryption to use.
+   * Decipher encrypted data using AES256 in CBC mode
    * @param {String|Buffer} ciphertext The data to decipher. Must be a
    *                                   multiple of the blocksize.
    * @param {String|Buffer} key The key to decipher the data with.
@@ -47,11 +45,11 @@ Crypto =
    *                                   contents as.
    * @return {Buffer|String} The decrypted contents.
   ###
-  decrypt: (mode, ciphertext, key, iv, encoding) ->
+  decrypt: (ciphertext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
     ciphertext = @toBuffer(ciphertext)
-    cipher = nodeCrypto.createDecipheriv(mode, key, iv)
+    cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
     binary = cipher.update(ciphertext) + cipher.final()
@@ -247,6 +245,18 @@ Crypto =
   dec2hex: (dec) ->
     hex = dec.toString(16)
     if hex.length < 2 then hex = "0" + hex
+    return hex
+
+
+  ###*
+   * Convert a binary string into a hex string.
+   * @param {String} binary The binary encoded string.
+   * @return {String} The hex encoded string.
+  ###
+  bin2hex: (binary) ->
+    hex = ""
+    for char in binary
+      hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, "0$1")
     return hex
 
 

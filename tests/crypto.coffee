@@ -1,5 +1,5 @@
 assert = require 'assert'
-Crypto = require '../keychain/crypto'
+Crypto = require '../src/crypto'
 
 describe 'Crypto', ->
 
