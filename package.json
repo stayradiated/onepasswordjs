@@ -1,5 +1,5 @@
 {
-  "name": "cloudkeychain",
+  "name": "CloudKeychain",
   "version": "0.1.0",
   "description": "read and write onepassword cloudkeychain files",
   "keywords": [
@@ -12,16 +12,15 @@
     "type": "git",
     "url": ""
   },
-  "dependencies": {
-    "commander": "*"
-  },
-  "main": "index",
+  "dependencies": {},
+  "main": "js/keychain.js",
   "engines": {
     "node": ">= 0.8.x"
   },
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-contrib-coffee": "~0.5.0",
-    "grunt-contrib-watch": "~0.3.1"
+    "grunt-contrib-watch": "~0.3.1",
+    "grunt-browserify": "git://github.com/jmreidy/grunt-browserify.git#master"
   }
 }
