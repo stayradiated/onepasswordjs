@@ -1,25 +1,32 @@
 {
-  "name": "1passwordjs",
+  "name": "1password",
+  "description": "Work With 1Password Keychains",
   "version": "0.1.0",
-  "description": "read and write onepassword cloudkeychain files",
-  "keywords": [
-    "onepassword",
-    "cloud",
-    "keychain"
-  ],
   "author": "George Czabania <george@czabania.com>",
   "repository": {
     "type": "git",
     "url": "git://github.com/stayradiated/onepasswordjs.git"
   },
-  "dependencies": {},
-  "main": "js/keychain.js",
-  "engines": {
-    "node": ">= 0.8.x"
+  "bugs": {
+    "url": "http://github.com/stayradiated/onepasswordjs/issues"
   },
+  "main": "js/keychain.js",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script tests"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "keywords": [
+    "onepassword",
+    "cloud",
+    "keychain"
+  ],
+  "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-contrib-coffee": "~0.5.0",
-    "grunt-contrib-watch": "~0.3.1"
+    "grunt-contrib-watch": "~0.3.1",
+    "mocha": "1.7.x"
   }
 }

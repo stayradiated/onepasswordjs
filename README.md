@@ -29,7 +29,7 @@ JSON)
 
 Install via NPM:
 
-    npm install 1passwordjs
+    npm install 1password
 
 Then require it:
 
