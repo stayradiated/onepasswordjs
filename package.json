@@ -1,5 +1,5 @@
 {
-  "name": "CloudKeychain",
+  "name": "1passwordjs",
   "version": "0.1.0",
   "description": "read and write onepassword cloudkeychain files",
   "keywords": [

@@ -1,4 +1,4 @@
-# Cloud Keychain for Node.js
+# Cloud Keychain for Node.js (v0.1)
 
 This is a small library to make it easy to work with
   [1Password's](http://agilebits.com/onepassword) .cloudKeychain files.
@@ -11,7 +11,7 @@ This implementation is based on the
   of 1Password. Their software is awesome and you should probably go buy it.
   Please don't sue me!
 
-Currently supported: 
+Currently supported:
 
 - Unlock keychain using Master Password
 - Load items from band_*.js files
@@ -30,7 +30,7 @@ JSON)
 Tests are written using [Mocha](http://visionmedia.github.com/mocha/).
 To run the tests
 
-  mocha --compilers coffee:coffee-script
+  mocha --compilers coffee:coffee-script tests
 
 License
 -------
