@@ -9,6 +9,11 @@
 # Dependencies
 Crypto = require('crypto')
 
+
+# Constants
+SALT_SUFFIX = "00000001"
+
+
 ###*
  * @class A simple HMAC system
 ###
@@ -48,10 +53,11 @@ module.exports = (password, salt, count=10000, length=512) ->
     password = new Buffer(password)
 
   if typeof salt is 'string'
-    salt = new Buffer(salt, 'hex')
+    salt = new Buffer(salt+SALT_SUFFIX, 'hex')
+  else
+    salt = Buffer.concat [salt, new Buffer(SALT_SUFFIX, 'hex')]
 
   hmac = new Hmac(password, length)
-  salt = Buffer.concat [salt, new Buffer('00000001', 'hex')]
   last = xorsum = hmac.encrypt(salt)
   bit_length = 512 / 8
   i = 1
