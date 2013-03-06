@@ -15,14 +15,14 @@ SALT_SUFFIX = "00000001"
 
 
 ###*
- * @class A simple HMAC system
+ * @class Hmac
 ###
 class Hmac
 
   ###*
    * @constructor
-   * @param {buffer} key The key to derive data from
-   * @param {number} size The SHA algorithm to use
+   * @param {buffer} key The key to derive data from.
+   * @param {number} size The SHA algorithm to use.
   ###
   constructor: (key, size) ->
     @key = new Buffer(key)
@@ -31,8 +31,8 @@ class Hmac
 
   ###*
    * Hash data
-   * @param  {buffer} buffer The data to hash.
-   * @return {buffer}        The hashed data.
+   * @param {buffer} buffer The data to hash.
+   * @return {buffer} The hashed data.
   ###
   encrypt: (buffer) ->
     binary = Crypto.createHmac(@mode, @key).update(buffer).digest('binary')
@@ -41,11 +41,11 @@ class Hmac
 
 ###*
  * PBKDF2
- * @param  {string|buffer} password      The password to derive a key from.
- * @param  {string|buffer} salt          The salt.
- * @param  {number} [count=10000] Number of iterations.
- * @param  {number} [length=512]  The SHA algorithm to use.
- * @return {buffer}               The derived key.
+ * @param {string|buffer} password The password to derive a key from.
+ * @param {string|buffer} salt The salt.
+ * @param {number} [count=10000] Number of iterations.
+ * @param {number} [length=512] The SHA algorithm to use.
+ * @return {buffer} The derived key.
 ###
 module.exports = (password, salt, count=10000, length=512) ->
 
@@ -53,13 +53,14 @@ module.exports = (password, salt, count=10000, length=512) ->
     password = new Buffer(password)
 
   if typeof salt is 'string'
-    salt = new Buffer(salt+SALT_SUFFIX, 'hex')
+    salt = new Buffer(salt + SALT_SUFFIX, 'hex')
   else
     salt = Buffer.concat [salt, new Buffer(SALT_SUFFIX, 'hex')]
 
   hmac = new Hmac(password, length)
   last = xorsum = hmac.encrypt(salt)
-  bit_length = 512 / 8
+  bit_length = length / 8
+
   i = 1
   while i < count
     xorsum = hmac.encrypt(xorsum)
@@ -68,4 +69,5 @@ module.exports = (password, salt, count=10000, length=512) ->
       last[j] ^= xorsum[j]
       j++
     i++
+
   return last.toString('hex')
