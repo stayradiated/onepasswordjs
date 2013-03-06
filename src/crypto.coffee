@@ -1,5 +1,4 @@
 nodeCrypto = require('crypto')
-sjcl = require('../libs/sjcl')
 
 # Constants
 BLOCKSIZE = 16
@@ -62,34 +61,13 @@ Crypto =
 
   ###*
    * Generate keys from password using PKDF2-HMAC-SHA512.
-   * @param {String} password The password.
+   * @param {String|Buffer} password The password.
    * @param {String|Buffer} salt The salt.
    * @param {Number} [iterations=10000] The numbers of iterations.
-   * @param {Numbers} [keysize=512] The length of the derived key in bits.
+   * @param {Number} [keysize=512] The SHA algorithm to use.
    * @return {String} Returns the derived key encoded as hex.
   ###
-  pbkdf2: (password, salt, iterations=10000, keysize=512) ->
-
-    # Users SJCL PBKDF2 with Node.js Crypto HMAC-SHA512
-    # Because Node.js Crypto PBKDF2 only supports HMAC-SHA1
-
-    shaKey = "sha#{keysize}"
-
-    class hmac
-
-      constructor: (key) ->
-        @key = sjcl.codec.utf8String.fromBits(key)
-
-      encrypt: (sjclArray) ->
-        byteArray = sjcl.codec.bytes.fromBits(sjclArray)
-        buffer = new Buffer(byteArray)
-        hex = nodeCrypto.createHmac(shaKey, @key).update(buffer).digest('hex')
-        bits = sjcl.codec.hex.toBits(hex)
-        return bits
-
-    salt = sjcl.codec.hex.toBits(@toHex(salt))
-    bits = sjcl.misc.pbkdf2(password, salt, iterations, keysize, hmac)
-    return sjcl.codec.hex.fromBits(bits)
+  pbkdf2: require('./crypto_pbkdf2')
 
 
   ###*
