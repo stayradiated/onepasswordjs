@@ -60,7 +60,7 @@ openItem = ->
     if query is "list"
       listItems()
       return openItem()
-    results = keychain.findItem(query)
+    results = keychain.findItems(query)
     if results.length > 0
       item = results[0]
       # console.log JSON.stringify results[0].overview, null, 2

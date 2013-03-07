@@ -465,9 +465,10 @@
     */
 
 
-    Keychain.prototype.decryptItem = function(uuid) {
-      var item;
-      item = this.getItem(uuid);
+    Keychain.prototype.decryptItem = function(item) {
+      if (typeof item === 'string') {
+        item = this.getItem(item);
+      }
       return item.decryptDetails(this.master);
     };
 
@@ -487,7 +488,7 @@
     */
 
 
-    Keychain.prototype.findItem = function(query) {
+    Keychain.prototype.findItems = function(query) {
       var item, uuid, _ref, _results;
       _ref = this.items;
       _results = [];

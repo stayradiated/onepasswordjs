@@ -66,7 +66,7 @@ __Step 3: Get items__
 
 __Step 4: Decrypt item details__
 
-    item = keychain.findItem( 'Facebook' );
+    item = keychain.findItems( 'Facebook' );
     details = keychain.decryptItem( item.uuid );
     console.log( details );
 
@@ -196,17 +196,85 @@ It should only be called when the user does something important in the app.
 
     keychain.rescheduleAutoLock()
 
+
 ### Items
+
+Working with items.
+
 #### createItem(data)
+
+Creates a new instance of an item using the information in `data`.
+It returns the item instance, but it does not add it to the keychain. Use `addItem()` to do that.
+
+    item = keychain.createItem({
+      title: 'Github',
+      username: 'wendyappleseed',
+      password: 'password',
+      url: 'github.com',
+      notes: ''
+    });
+
 #### addItem(item)
+
+Adds an item to the keychain.
+If `item` is not an instance of an item, it is turned into one using `new Item(item)`.
+
+    keychain.addItem(item);
+
 #### getItem(uuid)
-#### findItem(query)
-#### decryptItem(uuid)
+
+Get an item by its UUID.
+
+    item = keychain.getItem('B1198E4C643E73A6226B89BB600371A9');
+
+#### findItems(query)
+
+Search the keychain for an item by its name or location.
+Returns an array of items.
+
+    items = keychain.findItems('github');
+
+#### decryptItem(item|uuid)
+
+Decrypt an items details. Can be passed an item or an item UUID.
+
+    details = keychain.decryptItem(item);
+    details = keychain.decryptItem('B1198E4C643E73A6226B89BB600371A9');
+
 #### eachItem(fn)
 
+Loop through all the items in the keychain.
+Calls fn with the arguments `[item]`.
+
+    keychain.eachItem(function(item) {
+      console.log( item );
+    });
+
+
 ### Exporting Data
+
+Export keychain data into stringified JSON. Ready for writing to disk.
+
 #### exportProfile()
+
+Export the profile.js file.
+
+    profile = keychain.exportProfile();
+    writeFile('profile.js', profile);
+
 #### exportBands()
+
+Export the band files (which holds the item data).
+Returns an object.
+
+    bands = keychain.exportBands()
+
+    console.log( bands );
+
+    {
+      "band_0.js": "ld({\n  \"B1198E4C643E73A6226B89BB600371A9\": {\n    \"category\": \"001\" ...",
+      filename: filedata
+    }
 
 ## Compiling
 

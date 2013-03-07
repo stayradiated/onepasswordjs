@@ -382,8 +382,9 @@ class Keychain
    * @param  {String} uuid The item UUID
    * @return {Object}      The items details
   ###
-  decryptItem: (uuid) ->
-    item = @getItem(uuid)
+  decryptItem: (item) ->
+    if typeof(item) is 'string'
+      item = @getItem(item)
     item.decryptDetails(@master)
 
 
@@ -399,7 +400,7 @@ class Keychain
   ###*
    * Search through all items
   ###
-  findItem: (query) ->
+  findItems: (query) ->
     for uuid, item of @items
       if item.match(query) is null then continue
       item
