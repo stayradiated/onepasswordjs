@@ -100,21 +100,101 @@ This logs the following (indented for readibility):
 ## Keychain Instance Methods
 
 ### Events
-#### on(event, id, fn)
-#### off(event, id)
-#### one(event, id, fn)
+
+Used to listen for events in the keychain. Their is currently only one event that is triggered at the moment
+
+  - 'lock'
+
+#### on(event, [id], fn)
+
+Listens for the event `event` and when triggered fires `fn`.
+If no `id` is specified, an id is generated automatically.
+Returns the `id`.
+
+    keychain.on('lock', function(autolock) {
+      console.log( 'The keychain has been locked' );
+    });
+
+#### off(event, [id])
+
+If an `id` is specified, it will remove that event listener.
+If no `id` is specifed, then it will remove all event listeners for that `event`.
+
+    keychain.off( 'lock' );
+
+#### one(event, [id], fn)
+
+The same as `on` but will only run once.
+
 
 ### Loading data from files
+
+Load keychain data from a file on disk.
+
 #### load(filepath)
+
+This is the main loading function and probably the only one you'll only ever need to use.
+`filepath` points to a `.cloudkeychain` folder and it will go through and load all files it finds using the other functions.
+
+    keychain.load( './1password.cloudkeychain' );
+
 #### loadProfile(filepath)
+
+Loads the `profile.js` file data into the keychain.
+
+    keychain.loadProfile( './1password.cloudkeychain/default/profile.js' );
+
 #### loadFolders(filepath)
+
+Load the `folders.js` file data into the keychain.
+
+    keychain.loadFolders( './1password.cloudkeychain/default/folders.js' );
+
 #### loadBands(bands)
+
+`bands` is an array of filepaths pointing to each band file.
+
+    keychain.loadBands([
+      './1password.cloudkeychain/default/band_0.js',
+      './1password.cloudkeychain/default/band_1.js',
+      './1password.cloudkeychain/default/band_2.js'
+    ]);
+
 #### loadAttachment(attachments)
 
+`attachments` is an array of filepaths pointing to each band file.
+
+    keychain.loadAttachments([
+      './1password.cloudkeychain/default/026AA7B7333B4F925F16DE9E21B912B7_5754B83288A34CD39DE64B45C2F05A9D.attachment',
+      './1password.cloudkeychain/default/6F8CDF100CC99FD55053B77492D97487_072A1462CBDE4E2488FB2DA16D96B84B.attachment'
+    ]);
+
+
 ### Unlocking data
+
+Handle the keychain unlocked status.
+
 #### unlock(password)
+
+Unlock the keychain's master and overview keys using `password`.
+It will automatically lock itself after 60 seconds, unless `rescheduleAutoLock` is called.
+
+    status = keychain.unlock( 'password' );
+    console.log( 'Keychain was unlocked successfully: ' + status );
+
 #### lock()
+
+Lock the keychain.
+This will dump the contents of all decrypted data, returning the state back to when the keychain was originally locked.
+
+    keychain.lock();
+
 #### rescheduleAutoLock()
+
+This will reschedule the autolock time.
+It should only be called when the user does something important in the app.
+
+    keychain.rescheduleAutoLock()
 
 ### Items
 #### createItem(data)
