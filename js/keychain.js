@@ -65,8 +65,8 @@
         overview: Crypto.randomBytes(64)
       };
       keys = {
-        master: Crypto.hash(raw.master, 'sha512'),
-        overview: Crypto.hash(raw.overview, 'sha512')
+        master: Crypto.hash(raw.master, 512),
+        overview: Crypto.hash(raw.overview, 512)
       };
       superKey = keychain._deriveKeys(password);
       keychain.encrypted = {
@@ -83,14 +83,6 @@
       };
       return keychain;
     };
-
-    /**
-     * Expose Item.create so you only have to include this one file
-     * @type {Function}
-    */
-
-
-    Keychain.createItem = Item.create;
 
     /**
      * Constructs a new Keychain
@@ -181,12 +173,12 @@
      * @param  {String}   event  The event name
      * @param  {String}   [id]   The id of the listener
      * @param  {Function} fn     The function to run when the event is triggered
-     * @param  {Boolean}  [once] Run once, and then remove the listener
+     * @param  {Boolean}  [_once] Run once, and then remove the listener
      * @return {String} The event id
     */
 
 
-    Keychain.prototype.on = function(event, id, fn, once) {
+    Keychain.prototype.on = function(event, id, fn, _once) {
       var _base, _ref,
         _this = this;
       if ((_ref = (_base = this._events)[event]) == null) {
@@ -198,7 +190,7 @@
         fn = id;
         id = "__" + ++this._events[event].index;
       }
-      if (once) {
+      if (_once) {
         this._events[event][id] = function() {
           var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -442,6 +434,17 @@
     };
 
     /**
+     * Expose Item.create so you only have to include this one file
+     * @param {Object} data Item data.
+     * @return {Object} An item instance.
+    */
+
+
+    Keychain.prototype.createItem = function(data) {
+      return Item.create(data, this.master, this.overview);
+    };
+
+    /**
      * Add an item to the keychain
      * @param {Object} item The item to add to the keychain
     */
@@ -466,6 +469,54 @@
       var item;
       item = this.getItem(uuid);
       return item.decryptDetails(this.master);
+    };
+
+    /**
+     * This returns an item with the matching UUID
+     * @param  {String} uuid The UUID to find the Item of
+     * @return {Item} The item matching the UUID
+    */
+
+
+    Keychain.prototype.getItem = function(uuid) {
+      return this.items[uuid];
+    };
+
+    /**
+     * Search through all items
+    */
+
+
+    Keychain.prototype.findItem = function(query) {
+      var item, uuid, _ref, _results;
+      _ref = this.items;
+      _results = [];
+      for (uuid in _ref) {
+        item = _ref[uuid];
+        if (item.match(query) === null) {
+          continue;
+        }
+        _results.push(item);
+      }
+      return _results;
+    };
+
+    /**
+     * Loop through all the items in the keychain, and pass each one to a
+     * function.
+     * @param  {Function} fn The function to pass each item to
+    */
+
+
+    Keychain.prototype.eachItem = function(fn) {
+      var item, uuid, _ref, _results;
+      _ref = this.items;
+      _results = [];
+      for (uuid in _ref) {
+        item = _ref[uuid];
+        _results.push(fn(item));
+      }
+      return _results;
     };
 
     /**
@@ -521,54 +572,6 @@
         files["band_" + id + ".js"] = data;
       }
       return files;
-    };
-
-    /**
-     * This returns an item with the matching UUID
-     * @param  {String} uuid The UUID to find the Item of
-     * @return {Item} The item matching the UUID
-    */
-
-
-    Keychain.prototype.getItem = function(uuid) {
-      return this.items[uuid];
-    };
-
-    /**
-     * Search through all items
-    */
-
-
-    Keychain.prototype.findItem = function(query) {
-      var item, uuid, _ref, _results;
-      _ref = this.items;
-      _results = [];
-      for (uuid in _ref) {
-        item = _ref[uuid];
-        if (item.match(query) === null) {
-          continue;
-        }
-        _results.push(item);
-      }
-      return _results;
-    };
-
-    /**
-     * Loop through all the items in the keychain, and pass each one to a
-     * function.
-     * @param  {Function} fn The function to pass each item to
-    */
-
-
-    Keychain.prototype.eachItem = function(fn) {
-      var item, uuid, _ref, _results;
-      _ref = this.items;
-      _results = [];
-      for (uuid in _ref) {
-        item = _ref[uuid];
-        _results.push(fn(item));
-      }
-      return _results;
     };
 
     return Keychain;

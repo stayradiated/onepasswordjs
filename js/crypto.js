@@ -1,9 +1,7 @@
 (function() {
-  var BLOCKSIZE, Crypto, nodeCrypto, sjcl;
+  var BLOCKSIZE, Crypto, nodeCrypto;
 
   nodeCrypto = require('crypto');
-
-  sjcl = require('../libs/sjcl');
 
   BLOCKSIZE = 16;
 
@@ -14,8 +12,7 @@
 
   Crypto = {
     /**
-     * Encipher data
-     * @param {String} mode The type of encryption to use.
+     * Encipher data using AES256 in CBC mode
      * @param {Buffer} plaintext The data to encrypt.
      * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or
      *                            hex encoded string.
@@ -25,11 +22,11 @@
      * @return {Buffer|String} The encrypted data.
     */
 
-    encrypt: function(mode, plaintext, key, iv, encoding) {
+    encrypt: function(plaintext, key, iv, encoding) {
       var binary, buffer, cipher;
       iv = this.toBuffer(iv);
       key = this.toBuffer(key);
-      cipher = nodeCrypto.createCipheriv(mode, key, iv);
+      cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv);
       cipher.setAutoPadding(false);
       binary = cipher.update(plaintext) + cipher.final();
       buffer = new Buffer(binary, 'binary');
@@ -40,8 +37,7 @@
       }
     },
     /**
-     * Decipher encrypted data.
-     * @param {String} mode The type of encryption to use.
+     * Decipher encrypted data using AES256 in CBC mode
      * @param {String|Buffer} ciphertext The data to decipher. Must be a
      *                                   multiple of the blocksize.
      * @param {String|Buffer} key The key to decipher the data with.
@@ -51,12 +47,12 @@
      * @return {Buffer|String} The decrypted contents.
     */
 
-    decrypt: function(mode, ciphertext, key, iv, encoding) {
+    decrypt: function(ciphertext, key, iv, encoding) {
       var binary, buffer, cipher;
       iv = this.toBuffer(iv);
       key = this.toBuffer(key);
       ciphertext = this.toBuffer(ciphertext);
-      cipher = nodeCrypto.createDecipheriv(mode, key, iv);
+      cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv);
       cipher.setAutoPadding(false);
       binary = cipher.update(ciphertext) + cipher.final();
       buffer = new Buffer(binary, 'binary');
@@ -68,44 +64,14 @@
     },
     /**
      * Generate keys from password using PKDF2-HMAC-SHA512.
-     * @param {String} password The password.
+     * @param {String|Buffer} password The password.
      * @param {String|Buffer} salt The salt.
      * @param {Number} [iterations=10000] The numbers of iterations.
-     * @param {Numbers} [keysize=512] The length of the derived key in bits.
+     * @param {Number} [keysize=512] The SHA algorithm to use.
      * @return {String} Returns the derived key encoded as hex.
     */
 
-    pbkdf2: function(password, salt, iterations, keysize) {
-      var bits, hmac, shaKey;
-      if (iterations == null) {
-        iterations = 10000;
-      }
-      if (keysize == null) {
-        keysize = 512;
-      }
-      shaKey = "sha" + keysize;
-      hmac = (function() {
-
-        function hmac(key) {
-          this.key = sjcl.codec.utf8String.fromBits(key);
-        }
-
-        hmac.prototype.encrypt = function(sjclArray) {
-          var bits, buffer, byteArray, hex;
-          byteArray = sjcl.codec.bytes.fromBits(sjclArray);
-          buffer = new Buffer(byteArray);
-          hex = nodeCrypto.createHmac(shaKey, this.key).update(buffer).digest('hex');
-          bits = sjcl.codec.hex.toBits(hex);
-          return bits;
-        };
-
-        return hmac;
-
-      })();
-      salt = sjcl.codec.hex.toBits(this.toHex(salt));
-      bits = sjcl.misc.pbkdf2(password, salt, iterations, keysize, hmac);
-      return sjcl.codec.hex.fromBits(bits);
-    },
+    pbkdf2: require('./crypto_pbkdf2'),
     /**
      * Cryptographically hash data using HMAC.
      * @param {String|Buffer} data The data to be hashed.
@@ -281,6 +247,21 @@
       hex = dec.toString(16);
       if (hex.length < 2) {
         hex = "0" + hex;
+      }
+      return hex;
+    },
+    /**
+     * Convert a binary string into a hex string.
+     * @param {String} binary The binary encoded string.
+     * @return {String} The hex encoded string.
+    */
+
+    bin2hex: function(binary) {
+      var char, hex, _i, _len;
+      hex = "";
+      for (_i = 0, _len = binary.length; _i < _len; _i++) {
+        char = binary[_i];
+        hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, "0$1");
       }
       return hex;
     },

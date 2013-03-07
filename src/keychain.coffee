@@ -77,13 +77,6 @@ class Keychain
 
 
   ###*
-   * Expose Item.create so you only have to include this one file
-   * @type {Function}
-  ###
-  @createItem: Item.create
-
-
-  ###*
    * Constructs a new Keychain
    * @constructor
    * @param  {Object} [items={}] Load items
@@ -145,15 +138,15 @@ class Keychain
    * @param  {String}   event  The event name
    * @param  {String}   [id]   The id of the listener
    * @param  {Function} fn     The function to run when the event is triggered
-   * @param  {Boolean}  [once] Run once, and then remove the listener
+   * @param  {Boolean}  [_once] Run once, and then remove the listener
    * @return {String} The event id
   ###
-  on: (event, id, fn, once) ->
+  on: (event, id, fn, _once) ->
     @_events[event] ?= {index: 0}
     if typeof(id) is 'function'
       fn = id
       id = "__" + ++@_events[event].index
-    if once
+    if _once
        @_events[event][id] = (args...) =>
         fn(args...)
         @off(event, id)
@@ -365,6 +358,15 @@ class Keychain
 
 
   ###*
+   * Expose Item.create so you only have to include this one file
+   * @param {Object} data Item data.
+   * @return {Object} An item instance.
+  ###
+  createItem: (data) ->
+    Item.create(data, @master, @overview)
+
+
+  ###*
    * Add an item to the keychain
    * @param {Object} item The item to add to the keychain
   ###
@@ -383,6 +385,34 @@ class Keychain
   decryptItem: (uuid) ->
     item = @getItem(uuid)
     item.decryptDetails(@master)
+
+
+  ###*
+   * This returns an item with the matching UUID
+   * @param  {String} uuid The UUID to find the Item of
+   * @return {Item} The item matching the UUID
+  ###
+  getItem: (uuid) ->
+    return @items[uuid]
+
+
+  ###*
+   * Search through all items
+  ###
+  findItem: (query) ->
+    for uuid, item of @items
+      if item.match(query) is null then continue
+      item
+
+
+  ###*
+   * Loop through all the items in the keychain, and pass each one to a
+   * function.
+   * @param  {Function} fn The function to pass each item to
+  ###
+  eachItem: (fn) ->
+    for uuid, item of @items
+      fn(item)
 
 
   ###*
@@ -426,34 +456,6 @@ class Keychain
       files["band_#{id}.js"] = data
 
     return files
-
-
-  ###*
-   * This returns an item with the matching UUID
-   * @param  {String} uuid The UUID to find the Item of
-   * @return {Item} The item matching the UUID
-  ###
-  getItem: (uuid) ->
-    return @items[uuid]
-
-
-  ###*
-   * Search through all items
-  ###
-  findItem: (query) ->
-    for uuid, item of @items
-      if item.match(query) is null then continue
-      item
-
-
-  ###*
-   * Loop through all the items in the keychain, and pass each one to a
-   * function.
-   * @param  {Function} fn The function to pass each item to
-  ###
-  eachItem: (fn) ->
-    for uuid, item of @items
-      fn(item)
 
 
 module.exports = Keychain

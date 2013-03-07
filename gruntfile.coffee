@@ -18,4 +18,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-watch')
 
   # Run tasks
-  grunt.registerTask('default', 'watch')
+  grunt.registerTask('default', 'coffee') # grunt
+  grunt.registerTask('compile', 'coffee') # grunt --compile
+  grunt.registerTask('watch', 'watch')    # grunt --watch

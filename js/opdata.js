@@ -57,12 +57,12 @@
       }
       dataToHmac = Crypto.toBuffer(object.slice(0, -64));
       expectedHmac = object.slice(-64);
-      objectHmac = Crypto.hmac(dataToHmac, this.hmacKey, 'sha256');
+      objectHmac = Crypto.hmac(dataToHmac, this.hmacKey, 256);
       if (objectHmac !== expectedHmac) {
         console.error('Hmac does not match');
         return false;
       }
-      rawtext = Crypto.decrypt('aes-256-cbc', ciphertext, this.encryptionKey, iv, 'hex');
+      rawtext = Crypto.decrypt(ciphertext, this.encryptionKey, iv, 'hex');
       if (type !== 'itemKey') {
         plaintext = Crypto.unpad(length, rawtext);
       }
@@ -72,7 +72,7 @@
         case 'itemKey':
           return [rawtext.slice(0, 64), rawtext.slice(64)];
         case 'profileKey':
-          keys = Crypto.hash(plaintext, 'sha512');
+          keys = Crypto.hash(plaintext, 512);
           return [keys.slice(0, 64), keys.slice(64)];
       }
     };
@@ -93,7 +93,7 @@
       } else {
         paddedtext = Crypto.concat([iv, Crypto.pad(plaintext)]);
       }
-      ciphertext = Crypto.encrypt('aes-256-cbc', paddedtext, this.encryptionKey, iv);
+      ciphertext = Crypto.encrypt(paddedtext, this.encryptionKey, iv);
       if (type === 'itemKey') {
         dataToHmac = Crypto.concat([iv, ciphertext]);
       } else {
@@ -102,7 +102,7 @@
         endian = Crypto.toBuffer(endian);
         dataToHmac = Crypto.concat([header, endian, iv, ciphertext]);
       }
-      hmac = Crypto.hmac(dataToHmac, this.hmacKey, 'sha256');
+      hmac = Crypto.hmac(dataToHmac, this.hmacKey, 256);
       hmac = Crypto.toBuffer(hmac);
       return Crypto.concat([dataToHmac, hmac]);
     };

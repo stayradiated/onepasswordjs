@@ -172,15 +172,14 @@
         dataToHmac += element + data;
       }
       dataToHmac = new Buffer(dataToHmac, 'utf8');
-      hmac = Crypto.hmac(dataToHmac, key, 'sha256');
+      hmac = Crypto.hmac(dataToHmac, key, 256);
       console.log(hmac);
       return console.log(this.hmac.toString('hex'));
     };
 
     /**
      * Decrypt the item details.
-     * @param {Object} master The keychain's master keys. Used to decrypt
-     *                        the encryption keys.
+     * @param {Object} master The keychain's master keys. Used to decrypt the encryption keys.
      * @return {Object} The item details.
     */
 
@@ -210,14 +209,14 @@
 
 
     Item.prototype.toJSON = function() {
-      var _ref;
+      var _ref, _ref1, _ref2, _ref3;
       return {
         category: this.category,
         created: this.created,
-        d: this.d.toString('base64'),
-        hmac: (_ref = this.hmac) != null ? _ref.toString('base64') : void 0,
-        k: this.k.toString('base64'),
-        o: this.o.toString('base64'),
+        d: (_ref = this.d) != null ? _ref.toString('base64') : void 0,
+        hmac: (_ref1 = this.hmac) != null ? _ref1.toString('base64') : void 0,
+        k: (_ref2 = this.k) != null ? _ref2.toString('base64') : void 0,
+        o: (_ref3 = this.o) != null ? _ref3.toString('base64') : void 0,
         tx: this.tx,
         updated: this.updated,
         uuid: this.uuid
