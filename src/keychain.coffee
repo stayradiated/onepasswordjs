@@ -65,13 +65,8 @@ class Keychain
       masterKey: superKey.encrypt('profileKey', raw.master)
       overviewKey: superKey.encrypt('profileKey', raw.overview)
 
-    keychain.master =
-      encryption: Crypto.toBuffer keys.master[0...64]
-      hmac: Crypto.toBuffer keys.master[64..]
-
-    keychain.overview =
-      encryption: Crypto.toBuffer keys.overview[0...64]
-      hmac: Crypto.toBuffer keys.overview[64..]
+    keychain.master = new Opdata(keys.master[0...64], keys.master[64..])
+    keychain.overview = new Opdata(keys.overview[0...64], keys.overview[64..])
 
     return keychain
 
@@ -363,7 +358,7 @@ class Keychain
    * @return {Object} An item instance.
   ###
   createItem: (data) ->
-    Item.create(data, @master, @overview)
+    Item.create(this, data)
 
 
   ###*
@@ -372,7 +367,7 @@ class Keychain
   ###
   addItem: (item) ->
     if not (item instanceof Item)
-      item = new Item().load(item)
+      item = new Item(this).load(item)
     @items[item.uuid] = item
     return this
 

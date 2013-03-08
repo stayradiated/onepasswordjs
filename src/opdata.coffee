@@ -15,7 +15,6 @@ class Opdata
   ###*
    * Opdata object
    * @constructor
-   * @param {String} type                 Can be either 'item', 'itemKey' or 'profileKey'
    * @param {String|Buffer} encryptionKey The encryption key
    * @param {String|Buffer} hmacKey       The hmac key
   ###

@@ -18,12 +18,12 @@ Currently supported:
 - Unlock item overview, keys and details
 - Create keychains and items
 
-
 Todo:
 
 - Find out how to calcuate the HMAC of items correctly
 - Actually do something with item data (instead of just handing back the raw
 JSON)
+- Get syncing working.
 
 ## Installation
 

@@ -16,16 +16,15 @@
   Item = (function() {
     /**
      * Create a new Item.
+     * @param {Kecyhain} keychain The keychain to encrypt the item with.
      * @param {Object} data The data to add to the Item.
-     * @param {Object} master The master encryption keys.
-     * @param {Object} overview The overview encryption keys.
      * @return {Item} The item.
     */
 
-    Item.create = function(data, master, overview) {
-      var item, timeNow;
+    Item.create = function(keychain, data) {
+      var item, keys, timeNow;
       timeNow = Math.floor(Date.now() / 1000);
-      item = new Item({
+      item = new Item(keychain, {
         uuid: Crypto.generateUuid(),
         created: timeNow,
         updated: timeNow,
@@ -58,10 +57,11 @@
         ],
         notesPlain: data.notes || ''
       };
-      item.keys = {
+      keys = {
         encryption: Crypto.randomBytes(32),
         hmac: Crypto.randomBytes(32)
       };
+      item.setItemKeys(keys);
       /**
        *
        * TODO: Move into seperate encryption functions
@@ -91,9 +91,14 @@
     */
 
 
-    function Item(attrs) {
-      this.match = __bind(this.match, this);
+    function Item(keychain, attrs) {
       var attr, key;
+      this.keychain = keychain;
+      this.match = __bind(this.match, this);
+      this.keysUnlocked = false;
+      this.detailsUnlocked = false;
+      this.overviewUnlocked = false;
+      this.encrypted = {};
       if (attrs != null) {
         for (key in attrs) {
           attr = attrs[key];
@@ -130,6 +135,50 @@
     };
 
     /**
+     * Set the item encryption keys
+     * @param {Opdata} master The keychain master keys.
+     * @param {Object} keys The encryption and hmac keys.
+     * @example
+     *   item.setItemKeys(master, {
+     *     encryption: encryptionKey,
+     *     hmac: hmacKey
+     *   })
+    */
+
+
+    Item.prototype.setItemKeys = function(keys) {
+      var joined;
+      joined = Buffer.concat([keys.encryption, keys.hmac]);
+      return this.keys = this.kecyhain.master.encrypt('itemKey', joined);
+    };
+
+    /**
+     * Lock the item completely
+    */
+
+
+    Item.prototype.lock = function() {
+      this.lockKeys();
+      this.lockDetails();
+      return this.lockOverview();
+    };
+
+    /**
+     * Decrypt the item encryption keys.
+     * @param {Opdata} master The keychain master keys.
+     * @return {Opdata} The item encryption keys.
+    */
+
+
+    Item.prototype.unlockKeys = function() {
+      var keys;
+      keys = this.keychain.master.decrypt('itemKey', this.keys);
+      this.keys = new Opdata(keys[0], keys[1]);
+      this.keysUnlocked = true;
+      return this.keys;
+    };
+
+    /**
      * Decrypt the overview data of an item.
      * @param {Opdata} overviewKey An Opdata profile key made with the
      *                             keychain's overview keys. Used to decrypt
@@ -138,18 +187,51 @@
     */
 
 
-    Item.prototype.decryptOverview = function(overviewKey) {
+    Item.prototype.unlockOverview = function() {
       var json;
-      json = overviewKey.decrypt('item', this.o);
-      return this.overview = JSON.parse(json);
+      json = this.keychain.overview.decrypt('item', this.encrypted.overview);
+      this.overview = JSON.parse(json);
+      this.overviewUnlocked = true;
+      return this.overview;
     };
 
-    Item.prototype.encryptOverview = function(overviewKey) {
+    Item.prototype.lockOverview = function() {
       var buffer, json;
       json = JSON.stringify(this.overview);
-      buffer = Crypto.toBuffer(json);
-      this.o = overviewKey.encrypt('item', buffer);
-      return this.o;
+      buffer = Crypto.toBuffer(json, 'utf8');
+      this.encrypted.overview = this.keychain.overview.encrypt('item', buffer);
+      this.overviewUnlocked = false;
+      return this.encrypted.overview;
+    };
+
+    /**
+     * Decrypt the item details.
+     * @param {Object} master The keychain's master keys. Used to decrypt the encryption keys.
+     * @return {Object} The item details.
+    */
+
+
+    Item.prototype.unlockDetails = function() {
+      var json;
+      if (!this.keysUnlocked) {
+        this.decryptItemKeys();
+      }
+      json = this.keys.decrypt('item', this.encrypted.details);
+      this.details = JSON.parse(json);
+      this.detailsUnlocked = true;
+      return this.details;
+    };
+
+    Item.prototype.lockDetails = function() {
+      var buffer, json;
+      if (!this.keysUnlocked) {
+        this.decryptItemKeys();
+      }
+      json = JSON.stringify(this.details);
+      buffer = Crypto.toBuffer(json, 'utf8');
+      this.encrypted.details = this.keys.encrypt('item', buffer);
+      this.detailsUnlocked = false;
+      return this.encrypted.details;
     };
 
     /**
@@ -178,31 +260,6 @@
     };
 
     /**
-     * Decrypt the item details.
-     * @param {Object} master The keychain's master keys. Used to decrypt the encryption keys.
-     * @return {Object} The item details.
-    */
-
-
-    Item.prototype.decryptDetails = function(masterKey) {
-      var details, itemKey, keys;
-      keys = masterKey.decrypt('itemKey', this.k);
-      itemKey = new Opdata(keys[0], keys[1]);
-      details = itemKey.decrypt('item', this.d);
-      return JSON.parse(details);
-    };
-
-    Item.prototype.encryptDetails = function(masterKey, details) {
-      var buffer, itemKey, json, keys;
-      keys = masterKey.decrypt('itemKey', this.k);
-      itemKey = new Opdata(keys[0], keys[1]);
-      json = JSON.stringify(details);
-      buffer = Crypto.toBuffer(json);
-      this.d = itemKey.encrypt('item', buffer);
-      return this.d;
-    };
-
-    /**
      * Turn an item into a JSON object.
      * @return {Object} The JSON object.
     */
@@ -215,7 +272,7 @@
         created: this.created,
         d: (_ref = this.d) != null ? _ref.toString('base64') : void 0,
         hmac: (_ref1 = this.hmac) != null ? _ref1.toString('base64') : void 0,
-        k: (_ref2 = this.k) != null ? _ref2.toString('base64') : void 0,
+        k: (_ref2 = this.keys) != null ? _ref2.toString('base64') : void 0,
         o: (_ref3 = this.o) != null ? _ref3.toString('base64') : void 0,
         tx: this.tx,
         updated: this.updated,

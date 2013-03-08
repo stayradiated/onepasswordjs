@@ -10,16 +10,15 @@ class Item
 
   ###*
    * Create a new Item.
+   * @param {Kecyhain} keychain The keychain to encrypt the item with.
    * @param {Object} data The data to add to the Item.
-   * @param {Object} master The master encryption keys.
-   * @param {Object} overview The overview encryption keys.
    * @return {Item} The item.
   ###
-  @create: (data, master, overview) =>
+  @create: (keychain, data) =>
 
     timeNow = Math.floor Date.now() / 1000
 
-    item = new Item
+    item = new Item keychain,
       uuid: Crypto.generateUuid()
       created: timeNow
       updated: timeNow
@@ -48,9 +47,11 @@ class Item
       ]
       notesPlain: data.notes or ''
 
-    item.keys =
+    keys =
       encryption: Crypto.randomBytes(32)
       hmac: Crypto.randomBytes(32)
+
+    item.setItemKeys(keys)
 
     ###*
      *
@@ -80,7 +81,11 @@ class Item
    * @constructor
    * @param {Object} [attrs] Any attributes to load into the item
   ###
-  constructor: (attrs) ->
+  constructor: (@keychain, attrs) ->
+    @keysUnlocked = false
+    @detailsUnlocked = false
+    @overviewUnlocked = false
+    @encrypted = {}
     if attrs?
       for key, attr of attrs
         @[key] = attr
@@ -103,22 +108,84 @@ class Item
 
 
   ###*
+   * Lock the item completely
+  ###
+  lock: ->
+    @lockKeys()
+    @lockDetails()
+    @lockOverview()
+
+
+  ###*
+   * Decrypt the item encryption keys.
+   * @param {Opdata} master The keychain master keys.
+   * @return {Opdata} The item encryption keys.
+  ###
+  unlockKeys: ->
+    keys = @keychain.master.decrypt('itemKey', @keys)
+    @keys = new Opdata(keys[0], keys[1])
+    @keysUnlocked = true
+    return @keys
+
+
+  ###*
+   * Set the item encryption keys
+   * @param {Opdata} master The keychain master keys.
+   * @param {Object} keys The encryption and hmac keys.
+   * @example
+   *   item.setItemKeys(master, {
+   *     encryption: encryptionKey,
+   *     hmac: hmacKey
+   *   })
+  ###
+  encryptKeys: (keys) ->
+    joined = Buffer.concat([keys.encryption, keys.hmac])
+    @keys = @kecyhain.master.encrypt('itemKey', joined)
+
+
+
+  ###*
    * Decrypt the overview data of an item.
    * @param {Opdata} overviewKey An Opdata profile key made with the
    *                             keychain's overview keys. Used to decrypt
    *                             the overview data.
    * @return {Object} The overview data.
   ###
-  decryptOverview: (overviewKey) ->
-    json = overviewKey.decrypt('item', @o)
+  unlockOverview: ->
+    json = @keychain.overview.decrypt('item', @encrypted.overview)
     @overview = JSON.parse(json)
+    @overviewUnlocked = true
+    return @overview
 
 
-  encryptOverview: (overviewKey) ->
+  encryptOverview: ->
     json = JSON.stringify(@overview)
-    buffer = Crypto.toBuffer(json)
-    @o = overviewKey.encrypt('item', buffer)
-    return @o
+    buffer = Crypto.toBuffer(json, 'utf8')
+    @encrypted.overview = @keychain.overview.encrypt('item', buffer)
+    @overviewUnlocked = false
+    return @encrypted.overview
+
+
+  ###*
+   * Decrypt the item details.
+   * @param {Object} master The keychain's master keys. Used to decrypt the encryption keys.
+   * @return {Object} The item details.
+  ###
+  unlockDetails: ->
+    @decryptItemKeys() unless @keysUnlocked
+    json = @keys.decrypt('item', @encrypted.details)
+    @details = JSON.parse(json)
+    @detailsUnlocked = true
+    return @details
+
+
+  encryptDetails: ->
+    @decryptItemKeys() unless @keysUnlocked
+    json = JSON.stringify(@details)
+    buffer = Crypto.toBuffer(json, 'utf8')
+    @encrypted.details = @keys.encrypt('item', buffer)
+    @detailsUnlocked = false
+    return @encrypted.details
 
 
   ###*
@@ -140,34 +207,6 @@ class Item
     console.log @hmac.toString('hex')
 
 
-
-  ###*
-   * Decrypt the item details.
-   * @param {Object} master The keychain's master keys. Used to decrypt the encryption keys.
-   * @return {Object} The item details.
-  ###
-  decryptDetails: (masterKey) ->
-
-    # Decrypt item keys
-    keys = masterKey.decrypt('itemKey', @k)
-    itemKey = new Opdata(keys[0], keys[1])
-
-    # Decrypt item details
-    details = itemKey.decrypt('item', @d)
-    return JSON.parse(details)
-
-
-  encryptDetails: (masterKey, details) ->
-
-    keys = masterKey.decrypt('itemKey', @k)
-    itemKey = new Opdata(keys[0], keys[1])
-
-    json = JSON.stringify(details)
-    buffer = Crypto.toBuffer(json)
-    @d = itemKey.encrypt('item', buffer)
-    return @d
-
-
   ###*
    * Turn an item into a JSON object.
    * @return {Object} The JSON object.
@@ -178,7 +217,7 @@ class Item
     d: @d?.toString('base64')
     # folder: ""
     hmac: @hmac?.toString('base64')
-    k: @k?.toString('base64')
+    k: @keys?.toString('base64')
     o: @o?.toString('base64')
     tx: @tx
     updated: @updated

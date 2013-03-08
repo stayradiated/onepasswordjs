@@ -73,14 +73,8 @@
         masterKey: superKey.encrypt('profileKey', raw.master),
         overviewKey: superKey.encrypt('profileKey', raw.overview)
       };
-      keychain.master = {
-        encryption: Crypto.toBuffer(keys.master.slice(0, 64)),
-        hmac: Crypto.toBuffer(keys.master.slice(64))
-      };
-      keychain.overview = {
-        encryption: Crypto.toBuffer(keys.overview.slice(0, 64)),
-        hmac: Crypto.toBuffer(keys.overview.slice(64))
-      };
+      keychain.master = new Opdata(keys.master.slice(0, 64), keys.master.slice(64));
+      keychain.overview = new Opdata(keys.overview.slice(0, 64), keys.overview.slice(64));
       return keychain;
     };
 
@@ -441,7 +435,7 @@
 
 
     Keychain.prototype.createItem = function(data) {
-      return Item.create(data, this.master, this.overview);
+      return Item.create(this, data);
     };
 
     /**
@@ -452,7 +446,7 @@
 
     Keychain.prototype.addItem = function(item) {
       if (!(item instanceof Item)) {
-        item = new Item().load(item);
+        item = new Item(this).load(item);
       }
       this.items[item.uuid] = item;
       return this;

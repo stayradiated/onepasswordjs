@@ -2,9 +2,11 @@ module.exports = (grunt) ->
 
   # Project configuration.
   grunt.initConfig
+
     watch:
       files: './src/*.coffee'
       tasks: 'coffee'
+
     coffee:
       glob_to_multiple:
         expand: true
@@ -19,5 +21,3 @@ module.exports = (grunt) ->
 
   # Run tasks
   grunt.registerTask('default', 'coffee') # grunt
-  grunt.registerTask('compile', 'coffee') # grunt --compile
-  grunt.registerTask('watch', 'watch')    # grunt --watch
