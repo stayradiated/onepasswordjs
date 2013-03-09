@@ -394,7 +394,7 @@
       this.master = new Opdata(master[0], master[1]);
       this.overview = new Opdata(overview[0], overview[1]);
       this.eachItem(function(item) {
-        return item.unlockOverview();
+        return item.unlock('overview');
       });
       this.unlocked = true;
       this.rescheduleAutoLock();

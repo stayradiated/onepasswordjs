@@ -24,6 +24,7 @@ Todo:
 - Actually do something with item data (instead of just handing back the raw
 JSON)
 - Get syncing working.
+- Add memoize pattern to opdata class to speed up item locking when no data has changed.
 
 ## Installation
 

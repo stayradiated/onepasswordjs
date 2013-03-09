@@ -15,20 +15,20 @@ class Opdata
   ###*
    * Opdata object
    * @constructor
-   * @param {String|Buffer} encryptionKey The encryption key
-   * @param {String|Buffer} hmacKey       The hmac key
+   * @param {String|Buffer} encryption The encryption key
+   * @param {String|Buffer} hmac The hmac key
   ###
 
-  constructor: (encryptionKey, hmacKey) ->
-    @encryptionKey = Crypto.toBuffer(encryptionKey)
-    @hmacKey = Crypto.toBuffer(hmacKey)
+  constructor: (encryption, hmac) ->
+    @encryption = Crypto.toBuffer(encryption)
+    @hmac = Crypto.toBuffer(hmac)
 
-    if @encryptionKey.length isnt 32
-      console.log @encryptionKey.toString('hex')
+    if @encryption.length isnt 32
+      console.log @encryption.toString('hex')
       throw new Error "Encryption key must be 32 bytes."
 
-    if @hmacKey.length isnt 32
-      console.log @hmacKey.toString('hex')
+    if @hmac.length isnt 32
+      console.log @hmac.toString('hex')
       throw new Error "HMAC Key must be 32 bytes"
 
 
@@ -59,13 +59,13 @@ class Opdata
     expectedHmac = object[-64..]
 
     # Verify HMAC
-    objectHmac = Crypto.hmac(dataToHmac, @hmacKey, 256)
+    objectHmac = Crypto.hmac(dataToHmac, @hmac, 256)
     if objectHmac isnt expectedHmac
       console.error 'Hmac does not match'
       return false
 
     # Decipher
-    rawtext = Crypto.decrypt(ciphertext, @encryptionKey, iv, 'hex')
+    rawtext = Crypto.decrypt(ciphertext, @encryption, iv, 'hex')
 
     if type isnt 'itemKey'
       plaintext = Crypto.unpad(length, rawtext)
@@ -105,7 +105,7 @@ class Opdata
       paddedtext = Crypto.concat([iv, Crypto.pad(plaintext)])
 
     # Encrypt using AES 256 in cbc mode
-    ciphertext = Crypto.encrypt(paddedtext, @encryptionKey, iv)
+    ciphertext = Crypto.encrypt(paddedtext, @encryption, iv)
 
     # Header data
     if type is 'itemKey'
@@ -117,7 +117,7 @@ class Opdata
       dataToHmac = Crypto.concat([header, endian, iv, ciphertext])
 
     # Generate a HMAC using SHA256
-    hmac = Crypto.hmac(dataToHmac, @hmacKey, 256)
+    hmac = Crypto.hmac(dataToHmac, @hmac, 256)
     hmac = Crypto.toBuffer(hmac)
 
     return Crypto.concat([dataToHmac, hmac])

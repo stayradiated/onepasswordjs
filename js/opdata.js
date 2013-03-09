@@ -15,19 +15,19 @@
     /**
      * Opdata object
      * @constructor
-     * @param {String|Buffer} encryptionKey The encryption key
-     * @param {String|Buffer} hmacKey       The hmac key
+     * @param {String|Buffer} encryption The encryption key
+     * @param {String|Buffer} hmac The hmac key
     */
 
-    function Opdata(encryptionKey, hmacKey) {
-      this.encryptionKey = Crypto.toBuffer(encryptionKey);
-      this.hmacKey = Crypto.toBuffer(hmacKey);
-      if (this.encryptionKey.length !== 32) {
-        console.log(this.encryptionKey.toString('hex'));
+    function Opdata(encryption, hmac) {
+      this.encryption = Crypto.toBuffer(encryption);
+      this.hmac = Crypto.toBuffer(hmac);
+      if (this.encryption.length !== 32) {
+        console.log(this.encryption.toString('hex'));
         throw new Error("Encryption key must be 32 bytes.");
       }
-      if (this.hmacKey.length !== 32) {
-        console.log(this.hmacKey.toString('hex'));
+      if (this.hmac.length !== 32) {
+        console.log(this.hmac.toString('hex'));
         throw new Error("HMAC Key must be 32 bytes");
       }
     }
@@ -57,12 +57,12 @@
       }
       dataToHmac = Crypto.toBuffer(object.slice(0, -64));
       expectedHmac = object.slice(-64);
-      objectHmac = Crypto.hmac(dataToHmac, this.hmacKey, 256);
+      objectHmac = Crypto.hmac(dataToHmac, this.hmac, 256);
       if (objectHmac !== expectedHmac) {
         console.error('Hmac does not match');
         return false;
       }
-      rawtext = Crypto.decrypt(ciphertext, this.encryptionKey, iv, 'hex');
+      rawtext = Crypto.decrypt(ciphertext, this.encryption, iv, 'hex');
       if (type !== 'itemKey') {
         plaintext = Crypto.unpad(length, rawtext);
       }
@@ -95,7 +95,7 @@
       } else {
         paddedtext = Crypto.concat([iv, Crypto.pad(plaintext)]);
       }
-      ciphertext = Crypto.encrypt(paddedtext, this.encryptionKey, iv);
+      ciphertext = Crypto.encrypt(paddedtext, this.encryption, iv);
       if (type === 'itemKey') {
         dataToHmac = Crypto.concat([iv, ciphertext]);
       } else {
@@ -104,7 +104,7 @@
         endian = Crypto.toBuffer(endian);
         dataToHmac = Crypto.concat([header, endian, iv, ciphertext]);
       }
-      hmac = Crypto.hmac(dataToHmac, this.hmacKey, 256);
+      hmac = Crypto.hmac(dataToHmac, this.hmac, 256);
       hmac = Crypto.toBuffer(hmac);
       return Crypto.concat([dataToHmac, hmac]);
     };

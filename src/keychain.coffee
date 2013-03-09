@@ -323,7 +323,7 @@ class Keychain
 
     # Decrypt overview data
     @eachItem (item) =>
-      item.unlockOverview()
+      item.unlock('overview')
 
     @unlocked = true
 
