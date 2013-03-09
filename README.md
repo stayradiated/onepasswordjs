@@ -66,9 +66,9 @@ __Step 3: Get items__
 
 __Step 4: Decrypt item details__
 
-    item = keychain.findItems( 'Facebook' );
-    details = keychain.decryptItem( item.uuid );
-    console.log( details );
+    item = keychain.findItems( 'Facebook' )[0];
+    item.unlockDetails()
+    console.log( itemdetails );
 
 
 ## Main Keychain Methods
@@ -138,11 +138,17 @@ This is the main loading function and probably the only one you'll only ever nee
 
     keychain.load( './1password.cloudkeychain' );
 
-#### loadProfile(filepath)
+#### loadProfile(filepath, rawData)
 
 Loads the `profile.js` file data into the keychain.
+If you already have profile.js then set `rawData` to `true`.
 
-    keychain.loadProfile( './1password.cloudkeychain/default/profile.js' );
+    filename = './1password.cloudkeychain/default/profile.js';
+    keychain.loadProfile( filename );
+
+    // Alternative
+    profileData = readFile( filename )
+    keychain.loadProfile( profileData, true )
 
 #### loadFolders(filepath)
 
@@ -233,13 +239,6 @@ Search the keychain for an item by its name or location.
 Returns an array of items.
 
     items = keychain.findItems('github');
-
-#### decryptItem(item|uuid)
-
-Decrypt an items details. Can be passed an item or an item UUID.
-
-    details = keychain.decryptItem(item);
-    details = keychain.decryptItem('B1198E4C643E73A6226B89BB600371A9');
 
 #### eachItem(fn)
 

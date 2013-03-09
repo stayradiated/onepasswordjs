@@ -72,6 +72,9 @@ class Opdata
 
     switch type
 
+      when 'buffer'
+        return Crypto.toBuffer(plaintext)
+
       when 'item'
         return Crypto.toBuffer(plaintext).toString('utf8')
 

@@ -103,10 +103,10 @@ class Keychain
   ###
   _deriveKeys: (password) ->
     keys = Crypto.pbkdf2(password, @salt, @iterations)
-    @super =
+    derived =
       encryption: Crypto.toBuffer(keys[0...64])
       hmac: Crypto.toBuffer(keys[64..])
-    return new Opdata(@super.encryption, @super.hmac)
+    return new Opdata(derived.encryption, derived.hmac)
 
 
   ###*
@@ -210,13 +210,18 @@ class Keychain
 
   ###*
    * Load data from profile.js into keychain.
-   * @param  {String} filepath The path to the profile.js file.
+   * @param {String} filepath The path to the profile.js file.
+   * @param {Boolean} [rawData=false] If set to true, 'filepath' will be considered the actual profile data to load from.
   ###
-  loadProfile: (filepath) ->
+  loadProfile: (filepath, rawData) ->
 
-    profile = fs.readFileSync(filepath).toString()
-    profile = profile[PROFILE_PREFIX.length...-PROFILE_SUFFIX.length]
-    profile = JSON.parse(profile)
+    if rawData
+      data = filepath
+    else
+      data = fs.readFileSync(filepath).toString()
+
+    json = data[PROFILE_PREFIX.length...-PROFILE_SUFFIX.length]
+    profile = JSON.parse(json)
 
     @loadAttrs
       uuid: profile.uuid
@@ -267,8 +272,22 @@ class Keychain
    * @param  {Array} attachments An array of filepaths to each attachment file
   ###
   loadAttachment: (attachments) ->
-
     # TODO: Implement attachments ...
+
+
+  ###*
+   * Change the keychain master password. Since the derived keys and raw key data aren't stored, the current password must be supplied to decrypt this data again. Though slower, this is more secure than keeping this data in memory.
+   * @param {string} currentPassword The current master password.
+   * @param {string} newPassword The password to change to.
+  ###
+  changePassword: (currentPassword, newPassword) ->
+    currentKey = @_deriveKeys(currentPassword)
+    masterKey = currentKey.decrypt('buffer', @encrypted.masterKey)
+    overviewKey = currentKey.decrypt('buffer', @encrypted.overviewKey)
+    newKey = @_deriveKeys(newPassword)
+    @encrypted.masterKey = newKey.encrypt('profileKey', masterKey)
+    @encrypted.overviewKey = newKey.encrypt('profileKey', overviewKey)
+    return this
 
 
   ###*
@@ -304,7 +323,7 @@ class Keychain
 
     # Decrypt overview data
     @eachItem (item) =>
-      item.decryptOverview(@overview)
+      item.unlockOverview()
 
     @unlocked = true
 
@@ -370,17 +389,6 @@ class Keychain
       item = new Item(this).load(item)
     @items[item.uuid] = item
     return this
-
-
-  ###*
-   * Decrypt an item's details. The details are not saved to the item.
-   * @param  {String} uuid The item UUID
-   * @return {Object}      The items details
-  ###
-  decryptItem: (item) ->
-    if typeof(item) is 'string'
-      item = @getItem(item)
-    item.decryptDetails(@master)
 
 
   ###*

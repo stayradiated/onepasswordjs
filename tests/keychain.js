@@ -42,7 +42,15 @@ describe('Existing Keychain', function() {
 
   it('should decrypt an item', function() {
     var uuid = Object.keys(keychain.items)[0];
-    var details = keychain.decryptItem(uuid);
+    var details = keychain.getDetails(uuid);
+  });
+
+  it('should change the password', function() {
+    keychain.changePassword('fred', 'george');
+    var profile = keychain.exportProfile();
+    var newKeychain = new Keychain();
+    newKeychain.loadProfile(profile, true);
+    newKeychain.unlock('george');
   });
 
   it('should lock the keychain', function() {

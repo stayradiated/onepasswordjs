@@ -51,7 +51,7 @@ class Item
       encryption: Crypto.randomBytes(32)
       hmac: Crypto.randomBytes(32)
 
-    item.setItemKeys(keys)
+    item.encryptKeys(keys)
 
     ###*
      *
@@ -100,9 +100,15 @@ class Item
     for key in ['category', 'created', 'folder', 'tx', 'updated', 'uuid']
       if data[key]? then @[key] = data[key]
 
+    # Convert to base64
     for key in ['d', 'hmac', 'k', 'o']
       continue unless data[key]?
-      @[key] = Crypto.fromBase64(data[key])
+      data[key] = Crypto.fromBase64(data[key])
+
+    @hmac = data.hmac
+    @encrypted.keys = data.k
+    @encrypted.details = data.d
+    @encrypted.overview = data.o
 
     return this
 
@@ -122,7 +128,7 @@ class Item
    * @return {Opdata} The item encryption keys.
   ###
   unlockKeys: ->
-    keys = @keychain.master.decrypt('itemKey', @keys)
+    keys = @keychain.master.decrypt('itemKey', @encrypted.keys)
     @keys = new Opdata(keys[0], keys[1])
     @keysUnlocked = true
     return @keys
@@ -133,14 +139,14 @@ class Item
    * @param {Opdata} master The keychain master keys.
    * @param {Object} keys The encryption and hmac keys.
    * @example
-   *   item.setItemKeys(master, {
+   *   item.encryptKeys(master, {
    *     encryption: encryptionKey,
    *     hmac: hmacKey
    *   })
   ###
   encryptKeys: (keys) ->
     joined = Buffer.concat([keys.encryption, keys.hmac])
-    @keys = @kecyhain.master.encrypt('itemKey', joined)
+    @encrypted.keys = @keychain.master.encrypt('itemKey', joined)
 
 
 
@@ -172,7 +178,7 @@ class Item
    * @return {Object} The item details.
   ###
   unlockDetails: ->
-    @decryptItemKeys() unless @keysUnlocked
+    @unlockKeys() unless @keysUnlocked
     json = @keys.decrypt('item', @encrypted.details)
     @details = JSON.parse(json)
     @detailsUnlocked = true
@@ -180,7 +186,7 @@ class Item
 
 
   encryptDetails: ->
-    @decryptItemKeys() unless @keysUnlocked
+    @unlockKeys() unless @keysUnlocked
     json = JSON.stringify(@details)
     buffer = Crypto.toBuffer(json, 'utf8')
     @encrypted.details = @keys.encrypt('item', buffer)
