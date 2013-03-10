@@ -65,7 +65,7 @@ openItem = ->
       item = results[0]
       # console.log JSON.stringify results[0].overview, null, 2
       # uuid = results[0].uuid
-      details = item.decryptDetails(keychain.master)
+      details = item.unlock('details')
       displayItem(item, details)
     else
       console.log 'Nothing found... Hint: Enter `list` to display all'
