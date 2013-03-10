@@ -95,7 +95,7 @@ class Item
 
   ###*
    * Lock the item.
-   * Encrypts the item data then deletes the unencrypted data.
+   * Deletes the unencrypted data.
   ###
   lock: (type) ->
     switch type
@@ -106,19 +106,16 @@ class Item
         return this
 
       when 'keys'
-        @encrypt('keys')
         delete @keys
         keysUnlocked = false
         return this
 
       when 'details'
-        @encrypt('details')
         delete @details
         detailsUnlocked = false
         return this
 
       when 'overview'
-        @encrypt('overview')
         delete @overview
         overviewUnlocked = false
         return this

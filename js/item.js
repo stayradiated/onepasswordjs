@@ -121,7 +121,7 @@
 
     /**
      * Lock the item.
-     * Encrypts the item data then deletes the unencrypted data.
+     * Deletes the unencrypted data.
     */
 
 
@@ -134,17 +134,14 @@
           this.lock('overview');
           return this;
         case 'keys':
-          this.encrypt('keys');
           delete this.keys;
           keysUnlocked = false;
           return this;
         case 'details':
-          this.encrypt('details');
           delete this.details;
           detailsUnlocked = false;
           return this;
         case 'overview':
-          this.encrypt('overview');
           delete this.overview;
           overviewUnlocked = false;
           return this;

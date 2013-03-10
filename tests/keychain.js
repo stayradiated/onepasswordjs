@@ -46,6 +46,19 @@ describe('Existing Keychain', function() {
     item.unlock('details')
   });
 
+  it('should edit and save an item', function() {
+    var uuid = Object.keys(keychain.items)[1];
+    var item = keychain.getItem(uuid);
+    item.unlock('details');
+    item.details.title = 'item title';
+    item.encrypt('details').lock('details');
+    assert.equal(item.details, undefined);
+    item.unlock('details');
+    assert.equal(item.details.title, 'item title');
+    item.lock('all');
+    assert.equal(item.keys, undefined);
+  });
+
   it('should change the password', function() {
     keychain.changePassword('fred', 'george');
     var profile = keychain.exportProfile();
