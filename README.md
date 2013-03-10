@@ -9,7 +9,6 @@ This implementation is based on the
 
 *IMPORTANT NOTE*: I am not in any way affiliated with AgileBits, the makers
   of 1Password. Their software is awesome and you should probably go buy it.
-  Please don't sue me!
 
 Currently supported:
 
@@ -72,9 +71,9 @@ __Step 4: Decrypt item details__
     console.log( itemdetails );
 
 
-## Main Keychain Methods
+# Main Keychain Methods
 
-### Keychain.create(password, hint)
+## Keychain.create(password, hint)
 
 Returns an empty keychain encrypted using the password specified.
 
@@ -98,15 +97,15 @@ This logs the following (indented for readibility):
     };
 
 
-## Keychain Instance Methods
+# Keychain Instance Methods
 
-### Events
+## Events
 
 Used to listen for events in the keychain. Their is currently only one event that is triggered at the moment
 
   - 'lock'
 
-#### on(event, [id], fn)
+### on(event, [id], fn)
 
 Listens for the event `event` and when triggered fires `fn`.
 If no `id` is specified, an id is generated automatically.
@@ -116,30 +115,30 @@ Returns the `id`.
       console.log( 'The keychain has been locked' );
     });
 
-#### off(event, [id])
+### off(event, [id])
 
 If an `id` is specified, it will remove that event listener.
 If no `id` is specifed, then it will remove all event listeners for that `event`.
 
     keychain.off( 'lock' );
 
-#### one(event, [id], fn)
+### one(event, [id], fn)
 
 The same as `on` but will only run once.
 
 
-### Loading data from files
+## Loading data from files
 
 Load keychain data from a file on disk.
 
-#### load(filepath)
+### load(filepath)
 
 This is the main loading function and probably the only one you'll only ever need to use.
 `filepath` points to a `.cloudkeychain` folder and it will go through and load all files it finds using the other functions.
 
     keychain.load( './1password.cloudkeychain' );
 
-#### loadProfile(filepath, rawData)
+### loadProfile(filepath, rawData)
 
 Loads the `profile.js` file data into the keychain.
 If you already have profile.js then set `rawData` to `true`.
@@ -151,13 +150,13 @@ If you already have profile.js then set `rawData` to `true`.
     profileData = readFile( filename )
     keychain.loadProfile( profileData, true )
 
-#### loadFolders(filepath)
+### loadFolders(filepath)
 
 Load the `folders.js` file data into the keychain.
 
     keychain.loadFolders( './1password.cloudkeychain/default/folders.js' );
 
-#### loadBands(bands)
+### loadBands(bands)
 
 `bands` is an array of filepaths pointing to each band file.
 
@@ -167,7 +166,7 @@ Load the `folders.js` file data into the keychain.
       './1password.cloudkeychain/default/band_2.js'
     ]);
 
-#### loadAttachment(attachments)
+### loadAttachment(attachments)
 
 `attachments` is an array of filepaths pointing to each band file.
 
@@ -177,11 +176,11 @@ Load the `folders.js` file data into the keychain.
     ]);
 
 
-### Unlocking data
+## Unlocking data
 
 Handle the keychain unlocked status.
 
-#### unlock(password)
+### unlock(password)
 
 Unlock the keychain's master and overview keys using `password`.
 It will automatically lock itself after 60 seconds, unless `rescheduleAutoLock` is called.
@@ -189,26 +188,26 @@ It will automatically lock itself after 60 seconds, unless `rescheduleAutoLock` 
     status = keychain.unlock( 'password' );
     console.log( 'Keychain was unlocked successfully: ' + status );
 
-#### lock()
+### lock()
 
 Lock the keychain.
 This will dump the contents of all decrypted data, returning the state back to when the keychain was originally locked.
 
     keychain.lock();
 
-#### rescheduleAutoLock()
+### rescheduleAutoLock()
 
 This will reschedule the autolock time.
-It should only be called when the user does something important in the app.
+It should only be called when the user does something importantt in the app.
 
     keychain.rescheduleAutoLock()
 
 
-### Items
+## Items
 
 Working with items.
 
-#### createItem(data)
+### createItem(data)
 
 Creates a new instance of an item using the information in `data`.
 It returns the item instance, but it does not add it to the keychain. Use `addItem()` to do that.
@@ -221,27 +220,27 @@ It returns the item instance, but it does not add it to the keychain. Use `addIt
       notes: ''
     });
 
-#### addItem(item)
+### addItem(item)
 
 Adds an item to the keychain.
 If `item` is not an instance of an item, it is turned into one using `new Item(item)`.
 
     keychain.addItem(item);
 
-#### getItem(uuid)
+### getItem(uuid)
 
 Get an item by its UUID.
 
     item = keychain.getItem('B1198E4C643E73A6226B89BB600371A9');
 
-#### findItems(query)
+### findItems(query)
 
 Search the keychain for an item by its name or location.
 Returns an array of items.
 
     items = keychain.findItems('github');
 
-#### eachItem(fn)
+### eachItem(fn)
 
 Loop through all the items in the keychain.
 Calls fn with the arguments `[item]`.
@@ -251,18 +250,18 @@ Calls fn with the arguments `[item]`.
     });
 
 
-### Exporting Data
+## Exporting Data
 
 Export keychain data into stringified JSON. Ready for writing to disk.
 
-#### exportProfile()
+### exportProfile()
 
 Export the profile.js file.
 
     profile = keychain.exportProfile();
     writeFile('profile.js', profile);
 
-#### exportBands()
+### exportBands()
 
 Export the band files (which holds the item data).
 Returns an object.
@@ -275,6 +274,61 @@ Returns an object.
       "band_0.js": "ld({\n  \"B1198E4C643E73A6226B89BB600371A9\": {\n    \"category\": \"001\" ...",
       filename: filedata
     }
+
+
+# Item Instance Methods
+
+### load(data)
+This is used to load the raw JSON data in a band file into an item.
+Fields such as `hmac`, `k`, `o` and `d` are converted from base64.
+
+	item.load({
+		category: '106',
+		created: 1361850113,
+		d: 'b3BkYXRhMDHlAgAAAAAAANQpT0oUzF1E ...',
+		hmac: '/Qzi7Gy37hIV18NgXffDMmt3iPZKVxIFlvvULxf5iCQ=',
+		k: '3OoNrhpqKeBkeVAHTgwXPjlEL++QJAhx ...',
+		o: 'b3BkYXRhMDElAAAAAAAAAEfvS1hvP9Ue …',
+		tx: 1361857114,
+		updated: 1361857114,
+		uuid: 'F11FC7E27E3645D09D2670F04EF5F252'
+	});
+
+### lock(type)
+Lock the item by deleting secure information such as the item keys, overview data and details.
+
+    console.log( item.overview ); // {...} Overview data
+    item.lock('overview');
+    console.log( item.overview ); // undefined
+
+
+### unlock(type)
+Unlock the item by decrypting secure information such as the item keys, overview data and details.
+
+    details = item.unlock('details')
+
+### encrypt(type)
+Encrypt item details.
+
+    item.unlock('details');
+    item.details.data = true;
+    item.encrypt('details');
+    item.lock('details');
+
+### toJSON()
+Export an item into a JSON object that can be saved in a band file.
+
+    json = item.toJSON();
+
+### match(query)
+Check if an item matches a query. Useful for searching through a keychain. It checks the title and URL of the item and is case insensitive.
+
+    item.overview.title == 'Facebook';
+    item.match('facebook'); // true
+    item.match('book');     // true
+    item.match('skype');    // false
+
+
 
 ## Compiling
 
