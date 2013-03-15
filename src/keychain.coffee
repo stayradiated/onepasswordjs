@@ -253,7 +253,6 @@ class Keychain
    * @param  {Array} bands An array of filepaths to each band file
   ###
   loadBands: (bands) ->
-
     for filepath in bands
 
       # Load file
@@ -404,9 +403,12 @@ class Keychain
    * Search through all items
   ###
   findItems: (query) ->
+    items = []
     for uuid, item of @items
+      if item.trashed then continue
       if item.match(query) is null then continue
-      item
+      items.push[item]
+    return items
 
 
   ###*

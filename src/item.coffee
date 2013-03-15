@@ -77,7 +77,7 @@ class Item
    * @return {this}
   ###
   load: (data) ->
-    for key in ['category', 'created', 'folder', 'tx', 'updated', 'uuid']
+    for key in ['category', 'created', 'fave', 'folder', 'tx', 'trashed', 'updated', 'uuid']
       if data[key]? then @[key] = data[key]
 
     # Convert to base64

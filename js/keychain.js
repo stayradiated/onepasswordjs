@@ -494,17 +494,20 @@
 
 
     Keychain.prototype.findItems = function(query) {
-      var item, uuid, _ref, _results;
+      var item, items, uuid, _ref;
+      items = [];
       _ref = this.items;
-      _results = [];
       for (uuid in _ref) {
         item = _ref[uuid];
+        if (item.trashed) {
+          continue;
+        }
         if (item.match(query) === null) {
           continue;
         }
-        _results.push(item);
+        items.push[item];
       }
-      return _results;
+      return items;
     };
 
     /**

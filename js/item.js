@@ -97,7 +97,7 @@
 
     Item.prototype.load = function(data) {
       var key, _i, _j, _len, _len1, _ref, _ref1;
-      _ref = ['category', 'created', 'folder', 'tx', 'updated', 'uuid'];
+      _ref = ['category', 'created', 'fave', 'folder', 'tx', 'trashed', 'updated', 'uuid'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
         if (data[key] != null) {
