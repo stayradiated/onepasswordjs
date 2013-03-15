@@ -1,4 +1,5 @@
 nodeCrypto = require('crypto')
+nodeCrypto.DEFAULT_ENCODING = 'binary';
 
 # Constants
 BLOCKSIZE = 16
