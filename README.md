@@ -1,4 +1,4 @@
-# Cloud Keychain for Node.js (v0.1)
+# Cloud Keychain for Node.js (v0.1.1)
 
 This is a small library to make it easy to work with
   [1Password's](http://agilebits.com/onepassword) .cloudKeychain files.
