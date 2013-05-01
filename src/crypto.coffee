@@ -1,5 +1,5 @@
 nodeCrypto = require('crypto')
-nodeCrypto.DEFAULT_ENCODING = 'binary';
+# nodeCrypto.DEFAULT_ENCODING = 'binary';
 
 # Constants
 BLOCKSIZE = 16
@@ -27,8 +27,7 @@ Crypto =
     cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
-    binary = cipher.update(plaintext) + cipher.final()
-    buffer = new Buffer(binary, 'binary')
+    buffer = @concat [cipher.update(plaintext), cipher.final()]
     if encoding?
       return buffer.toString(encoding)
     else
@@ -52,8 +51,7 @@ Crypto =
     cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv)
     # Don't use the default padding
     cipher.setAutoPadding(false)
-    binary = cipher.update(ciphertext) + cipher.final()
-    buffer = new Buffer(binary, 'binary')
+    buffer = @concat [cipher.update(ciphertext), cipher.final()]
     if encoding?
       return buffer.toString(encoding)
     else
@@ -135,6 +133,19 @@ Crypto =
   ###
   randomBytes: (length) ->
     return nodeCrypto.randomBytes(length)
+
+
+  ###*
+   * Generate a cryptographically strong pseudo-random number.
+   * Very similar to Math.random() except it's more random.
+   * @return {Number} The random number.
+  ###
+  randomValue: ->
+    bytes = @randomBytes(4)
+    hex = bytes.toString('hex')
+    decimal = parseInt(hex, 16)
+    value = decimal * Math.pow(2, -32)
+    return value
 
 
   ###*

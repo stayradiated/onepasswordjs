@@ -101,7 +101,7 @@ else if program.new
     password: 'Password: ',
     hint: 'Password Hint: '
     (user) ->
-      keychain = Keychain.create(user.password, user.hint)
+      keychain = Keychain.create(user.password, passwordHint: user.hint)
       fs.mkdirSync "#{filepath}/1Password.cloudkeychain"
       fs.mkdirSync "#{filepath}/1Password.cloudkeychain/default"
       fs.writeFileSync "#{filepath}/1Password.cloudkeychain/default/profile.js", keychain.exportProfile()

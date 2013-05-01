@@ -4,8 +4,6 @@
 
   nodeCrypto = require('crypto');
 
-  nodeCrypto.DEFAULT_ENCODING = 'binary';
-
   BLOCKSIZE = 16;
 
   /**
@@ -26,13 +24,12 @@
     */
 
     encrypt: function(plaintext, key, iv, encoding) {
-      var binary, buffer, cipher;
+      var buffer, cipher;
       iv = this.toBuffer(iv);
       key = this.toBuffer(key);
       cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv);
       cipher.setAutoPadding(false);
-      binary = cipher.update(plaintext) + cipher.final();
-      buffer = new Buffer(binary, 'binary');
+      buffer = this.concat([cipher.update(plaintext), cipher.final()]);
       if (encoding != null) {
         return buffer.toString(encoding);
       } else {
@@ -51,14 +48,13 @@
     */
 
     decrypt: function(ciphertext, key, iv, encoding) {
-      var binary, buffer, cipher;
+      var buffer, cipher;
       iv = this.toBuffer(iv);
       key = this.toBuffer(key);
       ciphertext = this.toBuffer(ciphertext);
       cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv);
       cipher.setAutoPadding(false);
-      binary = cipher.update(ciphertext) + cipher.final();
-      buffer = new Buffer(binary, 'binary');
+      buffer = this.concat([cipher.update(ciphertext), cipher.final()]);
       if (encoding != null) {
         return buffer.toString(encoding);
       } else {

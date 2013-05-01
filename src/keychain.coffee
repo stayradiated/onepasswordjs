@@ -32,24 +32,31 @@ class Keychain
   ###*
    * Create a new keychain
    * @param  {String} password The master password for the keychain.
-   * @param  {String} [hint] The master password hint.
-   * @param  {String} [profileName=default] The name of the keychain profile.
+   * @param  {Object} [settings] Extra options for the keychain, such as the
+   *                             hint and number of iterations
    * @return {Keychain} Returns a new Keychain object
   ###
 
-  @create: (password, hint, profileName='default') ->
+  @create: (password, settings={}) ->
 
-    timeNow = Math.floor Date.now() / 1000
+    currentTime = Math.floor(Date.now() / 1000)
 
-    keychain = new Keychain
+    options =
       uuid: Crypto.generateUuid()
       salt: Crypto.randomBytes(16)
-      createdAt: timeNow
-      updatedAt: timeNow
-      iterations: 20000
-      profileName: profileName
-      passwordHint: hint ? ''
+      createdAt: currentTime
+      updatedAt: currentTime
+      iterations: 2500
+      profileName: 'default'
+      passwordHint: ''
       lastUpdatedBy: 'Dropbox'
+
+    # Merge user specified settings with default options
+    for key in options
+      if settings.hasOwnProperty(key)
+        options[key] = settings[key]
+
+    keychain = new Keychain(options)
 
     raw =
       master: Crypto.randomBytes(256)
