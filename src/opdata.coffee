@@ -59,7 +59,7 @@ class Opdata
     expectedHmac = object[-64..]
 
     # Verify HMAC
-    objectHmac = Crypto.hmac(dataToHmac, @hmac, 256)
+    objectHmac = Crypto.hmac(dataToHmac, @hmac, 256, 'hex')
     if objectHmac isnt expectedHmac
       console.error 'Hmac does not match'
       return false
@@ -82,7 +82,7 @@ class Opdata
         return [rawtext[0...64], rawtext[64..]]
 
       when 'profileKey'
-        keys = Crypto.hash(plaintext, 512)
+        keys = Crypto.hash(plaintext, 512, 'hex')
         return [keys[0...64], keys[64..]]
 
 
@@ -118,7 +118,6 @@ class Opdata
 
     # Generate a HMAC using SHA256
     hmac = Crypto.hmac(dataToHmac, @hmac, 256)
-    hmac = Crypto.toBuffer(hmac)
 
     return Crypto.concat([dataToHmac, hmac])
 

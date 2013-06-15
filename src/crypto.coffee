@@ -1,5 +1,4 @@
 nodeCrypto = require('crypto')
-# nodeCrypto.DEFAULT_ENCODING = 'binary';
 
 # Constants
 BLOCKSIZE = 16
@@ -12,124 +11,119 @@ BLOCKSIZE = 16
 Crypto =
 
   ###*
-   * Encipher data using AES256 in CBC mode
-   * @param {Buffer} plaintext The data to encrypt.
-   * @param {String|Buffer} key The key to encrypt with. Can be a Buffer or
-   *                            hex encoded string.
-   * @param {String|Buffer} iv The IV. Can be a Buffer or hex encoded string.
-   * @param {string} [encoding=Buffer] The format to return the encrypted
-   *                                   data at.
-   * @return {Buffer|String} The encrypted data.
+   * Encrypt data using AES256 in CBC mode.
+   * - plaintext {Buffer} : The data to encrypt.
+   * - key {String|Buffer} : The key to encrypt with.
+   * - iv {String|Buffer} : The initialization vector.
+   * - [encoding] {string} : The format to return the encrypted data in.
+   * @return the encrypted data.
   ###
   encrypt: (plaintext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
     cipher = nodeCrypto.createCipheriv('aes-256-cbc', key, iv)
-    # Don't use the default padding
     cipher.setAutoPadding(false)
-    buffer = @concat [cipher.update(plaintext), cipher.final()]
-    if encoding?
-      return buffer.toString(encoding)
-    else
-      return buffer
+    buffer = @concat [ cipher.update(plaintext), cipher.final() ]
+    if encoding? then return buffer.toString(encoding)
+    return buffer
 
 
   ###*
-   * Decipher encrypted data using AES256 in CBC mode
-   * @param {String|Buffer} ciphertext The data to decipher. Must be a
-   *                                   multiple of the blocksize.
-   * @param {String|Buffer} key The key to decipher the data with.
-   * @param {String|Buffer} iv The initialization vector to use.
-   * @param {String} [encoding=Buffer] The format to return the decrypted
-   *                                   contents as.
-   * @return {Buffer|String} The decrypted contents.
+   * Decrypt encrypted data using AES256 in CBC mode
+   * - ciphertext {String|Buffer} : The data to decipher. Length must be a
+   *   multiple of the blocksize.
+   * - key {String|Buffer} : The key to decipher with.
+   * - iv {String|Buffer} : The initialization vector.
+   * - [encoding] {String} : The format to return the decrypted contents in.
+   * @return the decrypted data.
   ###
   decrypt: (ciphertext, key, iv, encoding) ->
     iv = @toBuffer(iv)
     key = @toBuffer(key)
     ciphertext = @toBuffer(ciphertext)
     cipher = nodeCrypto.createDecipheriv('aes-256-cbc', key, iv)
-    # Don't use the default padding
     cipher.setAutoPadding(false)
-    buffer = @concat [cipher.update(ciphertext), cipher.final()]
-    if encoding?
-      return buffer.toString(encoding)
-    else
-      return buffer
+    buffer = @concat [ cipher.update(ciphertext), cipher.final() ]
+    if encoding? then return buffer.toString(encoding)
+    return buffer
 
 
   ###*
    * Generate keys from password using PKDF2-HMAC-SHA512.
-   * @param {String|Buffer} password The password.
-   * @param {String|Buffer} salt The salt.
-   * @param {Number} [iterations=10000] The numbers of iterations.
-   * @param {Number} [keysize=512] The SHA algorithm to use.
-   * @return {String} Returns the derived key encoded as hex.
+   * - password {String|Buffer} : The password.
+   * - salt {String|Buffer} : The salt.
+   * - [iterations=10000] {Number} : The numbers of iterations.
+   * - [keysize=512] {Number} : The SHA algorithm to use.
+   * @return the derived key encoded as a hex string
   ###
   pbkdf2: require('./crypto_pbkdf2')
 
 
   ###*
    * Cryptographically hash data using HMAC.
-   * @param {String|Buffer} data The data to be hashed.
-   * @param {String|Buffer} key The key to use with HMAC.
-   * @param {string} mode The type of hash to use, such as sha1, sha256 or
-   *                      sha512.
-   * @return {String} The hmac digest encoded as hex.
+   * - data {String|Buffer} : The data to be hashed.
+   * - key {String|Buffer} : The key to use with HMAC.
+   * - keysize {Number} : The type of hash to use, e.g. 256 or 512.
+   * - [encoding] {String} : Data encoding to return as. If left unspecified,
+   *   it will return as a buffer.
+   * @return the hmac.
   ###
-  hmac: (data, key, keysize) ->
+  hmac: (data, key, keysize, encoding) ->
     data = @toBuffer(data)
     key = @toBuffer(key)
-    mode = "sha#{keysize}"
+    mode = 'sha' + keysize
     hmac = nodeCrypto.createHmac(mode, key)
     hmac.update(data)
-    return hmac.digest('hex')
+    if encoding? then return hmac.digest(encoding)
+    return hmac.digest()
 
 
   ###*
    * Create a hash digest of data.
-   * @param {String|Buffer} data The data to hash.
-   * @param {String} mode The type of hash to use, such as sha1, sha256, or
-   *                      sha512.
-   * @return {String} The hash digest encoded as hex.
+   * - data {String|Buffer} : The data to hash.
+   * - keysize {Number} : The type of hash to use, e.g. 256 or 512.
+   * - [encoding] {String} : Data encoding to return as. If left unspecified,
+   *   it will return as a buffer.
+   * @returns the hash.
   ###
-  hash: (data, keysize) ->
+  hash: (data, keysize, encoding) ->
     data = @toBuffer(data)
-    mode = "sha#{keysize}"
+    mode = 'sha' + keysize
     hash = nodeCrypto.createHash(mode)
     hash.update(data)
-    return hash.digest('hex')
+    if encoding? then return hash.digest(encoding)
+    return hash.digest()
 
 
   ###*
    * Prepend padding to data to make it fill the blocksize.
-   * @param {Buffer} data The data to pad.
-   * @return {Buffer} The data with padding added.
+   * - data {Buffer} : The data to pad.
+   * @returns a buffer.
   ###
   pad: (data) ->
-    bytesToPad = BLOCKSIZE - (data.length % BLOCKSIZE)
-    padding = @randomBytes(bytesToPad)
-    return Buffer.concat([padding, data])
+    paddingLength = BLOCKSIZE - (data.length % BLOCKSIZE)
+    padding = @randomBytes(paddingLength)
+    return Buffer.concat [ padding, data ]
 
 
   ###*
    * Remove padding from text.
-   * @param {Numbers} plaintextLength The length of the plaintext in bytes.
-   * @param {String|Buffer} data The data to remove the padding as a string
-   *                             encoded as hex or a buffer.
-   * @return {String} The data with the padding removed encoded as hex.
+   * - plaintextLength {Number} : The length of the plaintext in bytes.
+   * - data {String|Buffer} : The data to remove the padding from. Can be a
+   *   hex string or a buffer.
+   * @returns a hex string.
   ###
   unpad: (plaintextLength, data) ->
     data = @toHex(data)
-    # One byte uses two hex characters
+    # One byte is equal two hex characters
     plaintextLength *= 2
     return data[-plaintextLength..]
 
 
   ###*
    * Generates cryptographically strong pseudo-random data.
-   * @param {Numbers} length How many bytes of data you want.
-   * @return {Buffer} The random data as a Buffer.
+   * - length {Number} : How many bytes of data you need.
+   * @returns the random data as a Buffer.
   ###
   randomBytes: (length) ->
     return nodeCrypto.randomBytes(length)
@@ -138,22 +132,20 @@ Crypto =
   ###*
    * Generate a cryptographically strong pseudo-random number.
    * Very similar to Math.random() except it's more random.
-   * @return {Number} The random number.
+   * @returns a random number between 0 and 1.
   ###
   randomValue: ->
     bytes = @randomBytes(4)
     hex = bytes.toString('hex')
     decimal = parseInt(hex, 16)
-    value = decimal * Math.pow(2, -32)
-    return value
+    return decimal * Math.pow(2, -32)
 
 
   ###*
    * Convert data to a Buffer
-   * @param {String|Buffer} data The data to be converted. If a string, must
-   *                             be encoded as hex.
-   * @param {String} [encoding=hex] The format of the data to convert.
-   * @return {Buffer} The data as a Buffer
+   * - data {String|Buffer} : The string to be converted.
+   * - [encoding=hex] {String} : The format of the data to convert from.
+   * @returns a Buffer.
   ###
   toBuffer: (data, encoding='hex') ->
     if data instanceof Buffer then return data

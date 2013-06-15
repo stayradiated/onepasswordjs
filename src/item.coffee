@@ -196,7 +196,7 @@ class Item
       dataToHmac += element + data
 
     dataToHmac = new Buffer(dataToHmac, 'utf8')
-    hmac = Crypto.hmac(dataToHmac, key, 256)
+    hmac = Crypto.hmac(dataToHmac, key, 256, 'hex')
 
     console.log hmac
     console.log @hmac.toString('hex')

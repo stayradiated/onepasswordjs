@@ -63,8 +63,8 @@ class Keychain
       overview: Crypto.randomBytes(64)
 
     keys =
-      master: Crypto.hash(raw.master, 512)
-      overview: Crypto.hash(raw.overview, 512)
+      master: Crypto.hash(raw.master, 512, 'hex')
+      overview: Crypto.hash(raw.overview, 512, 'hex')
 
     superKey = keychain._deriveKeys(password)
 
@@ -88,6 +88,7 @@ class Keychain
     @profileName = 'default'
     @_events = {}
     @items = {}
+    @unlocked = false
     if attrs then @loadAttrs(attrs)
 
 
@@ -310,29 +311,39 @@ class Keychain
   ###
   unlock: (password) ->
 
+    if @unlocked
+      console.log 'Keychain already unlocked...'
+      return
+
     # Derive keys
     profileKey = @_deriveKeys(password)
 
-    # Decrypt profile keys
+    # Decrypt master key
     master = profileKey.decrypt('profileKey', @encrypted.masterKey)
     if not master.length
-      console.error "Could not decrypt master key"
+      console.error 'Could not decrypt master key'
+      @unlocked = false
       return false
 
+    # Decrypt overview key
     overview = profileKey.decrypt('profileKey', @encrypted.overviewKey)
     if not overview.length
-      console.error "Could not decrypt overview key"
-      return false
+      console.error 'Could not decrypt overview key'
+      @unlocked = false
+      return this
 
+    # Store keys
     @master = new Opdata(master[0], master[1])
     @overview = new Opdata(overview[0], overview[1])
 
     # Decrypt overview data
-    @eachItem (item) =>
-      item.unlock('overview')
+    @eachItem (item) => item.unlock('overview')
 
+    # Unlock has been successful
     @unlocked = true
+    @_trigger('unlock')
 
+    # Start autolock timer
     @rescheduleAutoLock()
     setTimeout (=> @_autolock()), 1000
 
@@ -345,12 +356,13 @@ class Keychain
    * @param {Boolean} autolock Whether the keychain was locked automatically.
   ###
   lock: (autolock) ->
-    @_trigger 'lock', autolock
+    @_trigger('lock:before', autolock)
     @super = undefined
     @master = undefined
     @overview = undefined
     @items = {}
     @unlocked = false
+    @_trigger('lock:after', autolock)
 
 
   ###*
