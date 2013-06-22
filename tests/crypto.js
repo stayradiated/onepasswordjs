@@ -4,29 +4,33 @@ var Crypto = require('../js/crypto');
 describe('Crypto', function() {
 
   /**
-   * ENCRYPTION
+   * ENCRYPTION and DECRYPTION
   */
-  var encoding = 'hex';
-  var plaintext = new Buffer('0123456789ABCDEF');
-  var key = "f0fb2c2dea3b28bd08a60c7049a5f62c3388872b82160a005ad3eb00ff0f69f3";
-  var iv = "6993260ef345b11c7c53e4dac76326f9";
-  var ciphertext = '489aa87997c0b113e5000111c32a79cd';
+  (function() {
 
-  it('should encrypt', function() {
-    var encrypted = Crypto.encrypt(plaintext, key, iv, encoding);
-    assert.equal(encrypted, ciphertext);
-  });
+    var encoding = 'hex';
+    var plaintext = new Buffer('0123456789ABCDEF');
+    var key = "f0fb2c2dea3b28bd08a60c7049a5f62c3388872b82160a005ad3eb00ff0f69f3";
+    var iv = "6993260ef345b11c7c53e4dac76326f9";
+    var ciphertext = '489aa87997c0b113e5000111c32a79cd';
 
-  it('should decrypt', function() {
-    var decrypted = Crypto.decrypt(ciphertext, key, iv);
-    assert.equal(decrypted.toString(), plaintext.toString());
-  });
+    it('should encrypt using AES', function() {
+      var encrypted = Crypto.encrypt(plaintext, key, iv, encoding);
+      assert.equal(encrypted, ciphertext);
+    });
+
+    it('should decrypt using AES', function() {
+      var decrypted = Crypto.decrypt(ciphertext, key, iv);
+      assert.equal(decrypted.toString(), plaintext.toString());
+    });
+
+  }());
 
 
   /**
    * PBKDF2
   */
-  it('should pbkdf2', function() {
+  it('should do PBKDF2 correctly', function() {
     var password = 'password';
     var salt = '0123456789ABCDEF';
     var pbkdf2 = Crypto.pbkdf2(password, salt, 10000, 512);
@@ -37,8 +41,8 @@ describe('Crypto', function() {
   /**
    * HMAC
   */
-  it('should hmac', function() {
-    var hmac = Crypto.hmac('bdd50cd25aacbab410ce7b8b9dcb97b17340be26793632fc80983d3bf525e0d7', '1bb1cc1d4f43b0a632ffe2ab1520f44df989ad33b2d82635d600aae8e05f5b4e', 256);
+  it('should generate the correct HMAC', function() {
+    var hmac = Crypto.hmac('bdd50cd25aacbab410ce7b8b9dcb97b17340be26793632fc80983d3bf525e0d7', '1bb1cc1d4f43b0a632ffe2ab1520f44df989ad33b2d82635d600aae8e05f5b4e', 256, 'hex');
     assert.equal(hmac, '83f6ba83b23b2efa853a9d695fb5e349d4ea65360478fec345ee14b70c5f4699');
   });
 
@@ -47,7 +51,7 @@ describe('Crypto', function() {
    * HASH
   */
   it('should hash', function() {
-    var hash = Crypto.hash('f04a1b185b1bfb92c73ecd430642b59332190b94e7ea0b5a9c65490032dcf253', 256);
+    var hash = Crypto.hash('f04a1b185b1bfb92c73ecd430642b59332190b94e7ea0b5a9c65490032dcf253', 256, 'hex');
     assert.equal(hash, 'bf1b0a9672b18dd90790fbe044155b1750e978fa832237ff4fb615c5e235034f');
   });
 
