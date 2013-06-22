@@ -33,7 +33,7 @@ describe('Crypto', function() {
   it('should do PBKDF2 correctly', function() {
     var password = 'password';
     var salt = '0123456789ABCDEF';
-    var pbkdf2 = Crypto.pbkdf2(password, salt, 10000, 512);
+    var pbkdf2 = Crypto.pbkdf2(password, salt, 10000, 512).toString('hex');
     assert.equal(pbkdf2, 'f119d9566f66c185d1616fc88d7edcb003abd7bcef4e1dcf3fbc628cb9acface5fdda2f14320661feddf6ebda3e10f313ba7c2a12e532050668d229d67f9f6a0');
   });
 
@@ -59,19 +59,24 @@ describe('Crypto', function() {
   /**
    * Padding
   */
-  it('should pad', function() {
-    var input = new Buffer('000000', 'hex');
-    var padding = Crypto.pad(input);
-    assert.equal(padding.length, 16);
-    assert.equal(padding.toString('hex').slice(-6), '000000');
-  });
+  (function() {
 
-  it('should unpad', function() {
-    var input = new Buffer('00000000000000001122334455667788', 'hex');
-    var unpadded = Crypto.unpad(8, input);
-    assert.equal(unpadded.length, 16);
-    assert.equal(unpadded.toString('hex'), '1122334455667788');
-  });
+    var input = new Buffer('Yellow Submarine');
+    var output;
+
+    it('should pad', function() {
+      output = Crypto.pad(input);
+      // Should be a multiple of 16
+      assert.equal( output.length % 16, 0 );
+    });
+
+    it('should unpad', function() {
+      var unpadded = Crypto.unpad(input.length, output);
+      // Should match the input
+      assert.equal( unpadded.toString(), input.toString() )
+    });
+
+  }());
 
 
   /**

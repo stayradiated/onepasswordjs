@@ -22,28 +22,26 @@ class Hmac
    * - key {buffer} : The key to derive data from.
    * - size {number} : The SHA algorithm to use.
   ###
-  constructor: (key, size) ->
-    @key = new Buffer(key)
+  constructor: (@key, size) ->
     @mode = "sha#{size}"
 
 
   ###*
    * Hash data
    * - buffer {buffer} : The data to hash.
-   * > buffer
+   * > buffer - the hashed data
   ###
   encrypt: (buffer) ->
-    binary = Crypto.createHmac(@mode, @key).update(buffer).digest('binary')
-    new Buffer(binary, 'binary')
+    binary = Crypto.createHmac(@mode, @key).update(buffer).digest()
 
 
 ###*
  * PBKDF2
  * - password {string|buffer} : The password to derive a key from.
  * - salt {string|buffer} : The salt.
- * - [count=1000] {number} : Number of iterations.
+ * - [count=10000] {number} : Number of iterations.
  * - [length=512] {number} : The SHA algorithm to use.
- * > string - the derived key as a hex string
+ * > buffer - the derived key
 ###
 module.exports = (password, salt, count=10000, length=512) ->
 
@@ -66,4 +64,4 @@ module.exports = (password, salt, count=10000, length=512) ->
     while ++j < bit_length
       last[j] ^= xorsum[j]
 
-  return last.toString('hex')
+  return last

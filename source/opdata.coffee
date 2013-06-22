@@ -1,48 +1,45 @@
-# Javascript implementation of the Agile Bits opdata01 format
+# Javascript implementation of the Agile Bits Opdata Version 1 format
 # http://learn.agilebits.com/1Password4/Security/keychain-design.html#opdata
 
+# Dependencies
 Crypto = require('./crypto')
 
 # Constants
-OPDATA01_HEADER = '6F70646174613031'
-
-###*
- * @class Opdata
-###
+OPDATA_HEADER = '6F70646174613031'
 
 class Opdata
 
-  ###*
-   * Opdata object
-   * @constructor
-   * @param {String|Buffer} encryption The encryption key
-   * @param {String|Buffer} hmac The hmac key
+  ###
+   * Opdata object. Construct a new instance with the keys and then use it to
+   * encrypt and decrypt data.
+   * - encryption {buffer} : The encryption key
+   * - hmac {buffer} : The hmac key
   ###
 
-  constructor: (encryption, hmac) ->
-    @encryption = Crypto.toBuffer(encryption)
-    @hmac = Crypto.toBuffer(hmac)
+  constructor: (@encryption, @hmac) ->
 
     if @encryption.length isnt 32
-      console.log @encryption.toString('hex')
       throw new Error "Encryption key must be 32 bytes."
 
     if @hmac.length isnt 32
-      console.log @hmac.toString('hex')
       throw new Error "HMAC Key must be 32 bytes"
 
 
-  ###*
+  ###
    * Decrypt an object
-   * @param {String} type Can be either 'item', 'itemKey' or 'profileKey'
-   * @param {String|Buffer} object The encrypted opdata object
-   * @return {String} The decrypted object
+   * - type {string} : Can be either buffer, item, itemKey or profileKey
+   * - object {string or buffer} : The encrypted opdata object
+   * > string or buffer - The decrypted object
   ###
 
   decrypt: (type, object) ->
+
+    if object not instanceof Buffer
+      console.log object
+
     object = Crypto.toHex(object)
 
-    if type isnt 'itemKey' and object[0...16].toUpperCase() isnt OPDATA01_HEADER
+    if type isnt 'itemKey' and object[0..15].toUpperCase() isnt OPDATA_HEADER
       console.error 'Not an opdata01 object'
       return false
 
@@ -65,32 +62,33 @@ class Opdata
       return false
 
     # Decipher
-    rawtext = Crypto.decrypt(ciphertext, @encryption, iv, 'hex')
-
+    rawBuffer = Crypto.decrypt(ciphertext, @encryption, iv)
+    
+    # ItemKeys are not padded
     if type isnt 'itemKey'
-      plaintext = Crypto.unpad(length, rawtext)
+      plaintext = Crypto.unpad(length, rawBuffer)
 
     switch type
 
       when 'buffer'
-        return Crypto.toBuffer(plaintext)
+        return plaintext
 
       when 'item'
-        return Crypto.toBuffer(plaintext).toString('utf8')
+        return plaintext.toString('utf8')
 
       when 'itemKey'
-        return [rawtext[0...64], rawtext[64..]]
+        return [rawBuffer[0..31], rawBuffer[32..]]
 
       when 'profileKey'
-        keys = Crypto.hash(plaintext, 512, 'hex')
-        return [keys[0...64], keys[64..]]
+        keys = Crypto.hash(plaintext, 512)
+        return [keys[0..31],keys[32..]]
 
 
-  ###*
+  ###
    * Encrypt plaintext as object
-   * @param {String} type Can be either 'item', 'itemKey' or 'profileKey'
-   * @param {Buffer} plaintext The data to be encrypted
-   * @return {Buffer} The encrypted opdata object
+   * - type {String} : Can be either 'item', 'itemKey' or 'profileKey'
+   * - plaintext {Buffer} : The data to be encrypted
+   * > buffer - the encrypted opdata object
   ###
 
   encrypt: (type, plaintext) ->
@@ -111,7 +109,7 @@ class Opdata
     if type is 'itemKey'
       dataToHmac = Crypto.concat([iv, ciphertext])
     else
-      header = Crypto.toBuffer(OPDATA01_HEADER)
+      header = Crypto.toBuffer(OPDATA_HEADER)
       endian = Crypto.stringifyLittleEndian(plaintext.length)
       endian = Crypto.toBuffer(endian)
       dataToHmac = Crypto.concat([header, endian, iv, ciphertext])
@@ -120,6 +118,5 @@ class Opdata
     hmac = Crypto.hmac(dataToHmac, @hmac, 256)
 
     return Crypto.concat([dataToHmac, hmac])
-
 
 module.exports = Opdata

@@ -22,22 +22,21 @@
      * - size {number} : The SHA algorithm to use.
     */
     function Hmac(key, size) {
-      this.key = new Buffer(key);
+      this.key = key;
       this.mode = "sha" + size;
     }
 
     /**
      * Hash data
      * - buffer {buffer} : The data to hash.
-     * > buffer
+     * > buffer - the hashed data
     */
 
 
     Hmac.prototype.encrypt = function(buffer) {
       var binary;
 
-      binary = Crypto.createHmac(this.mode, this.key).update(buffer).digest('binary');
-      return new Buffer(binary, 'binary');
+      return binary = Crypto.createHmac(this.mode, this.key).update(buffer).digest();
     };
 
     return Hmac;
@@ -48,9 +47,9 @@
    * PBKDF2
    * - password {string|buffer} : The password to derive a key from.
    * - salt {string|buffer} : The salt.
-   * - [count=1000] {number} : Number of iterations.
+   * - [count=10000] {number} : Number of iterations.
    * - [length=512] {number} : The SHA algorithm to use.
-   * > string - the derived key as a hex string
+   * > buffer - the derived key
   */
 
 
@@ -82,7 +81,7 @@
         last[j] ^= xorsum[j];
       }
     }
-    return last.toString('hex');
+    return last;
   };
 
 }).call(this);

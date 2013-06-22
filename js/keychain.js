@@ -31,10 +31,10 @@
   Keychain = (function() {
     /**
      * Create a new keychain
-     * - password  {String} : The master password for the keychain.
-     * - [settings] {Object} : Extra options for the keychain, such as the hint
+     * - password  {string} : The master password for the keychain.
+     * - [settings] {object} : Extra options for the keychain, such as the hint
      *   and number of iterations
-     * > {Keychain} - a new Keychain object
+     * > Keychain - a new Keychain object
     */
     Keychain.create = function(password, settings) {
       var currentTime, key, keychain, keys, options, raw, superKey, _i, _len;
@@ -64,32 +64,32 @@
         master: Crypto.randomBytes(256),
         overview: Crypto.randomBytes(64)
       };
-      keys = {
-        master: Crypto.hash(raw.master, 512, 'hex'),
-        overview: Crypto.hash(raw.overview, 512, 'hex')
-      };
       superKey = keychain._deriveKeys(password);
       keychain.encrypted = {
         masterKey: superKey.encrypt('profileKey', raw.master),
         overviewKey: superKey.encrypt('profileKey', raw.overview)
       };
-      keychain.master = new Opdata(keys.master.slice(0, 64), keys.master.slice(64));
-      keychain.overview = new Opdata(keys.overview.slice(0, 64), keys.overview.slice(64));
+      keys = {
+        master: Crypto.hash(raw.master, 512),
+        overview: Crypto.hash(raw.overview, 512)
+      };
+      keychain.master = new Opdata(keys.master.slice(0, 32), keys.master.slice(32));
+      keychain.overview = new Opdata(keys.overview.slice(0, 32), keys.overview.slice(32));
       return keychain;
     };
 
     /**
      * Constructs a new Keychain
-     * - [attrs] {Object} : Load items
+     * - [attrs] {object} : Load items
     */
 
 
     function Keychain(attrs) {
       this._autolock = __bind(this._autolock, this);      this.AUTOLOCK_LENGTH = 1 * 60 * 1000;
-      this.event = new EventEmitter();
       this.profileName = 'default';
       this.items = {};
       this.unlocked = false;
+      this.event = new EventEmitter();
       if (attrs) {
         this.loadAttrs(attrs);
       }
@@ -97,8 +97,8 @@
 
     /**
      * Easy way to load data into a keychain
-     * - {Object} attrs The attributes you want to load
-     * > {this}
+     * - {object} attrs The attributes you want to load
+     * > this - so it can be chained
     */
 
 
@@ -113,27 +113,24 @@
     };
 
     /**
-     * Derive super keys from password using PBKDF2
-     * - {String} password The master password.
-     * > {Opdata} - the derived keys.
+     * Derive the 'super' keys from password using PBKDF2
+     * - {string} password The master password.
+     * > Opdata - the derived keys.
     */
 
 
     Keychain.prototype._deriveKeys = function(password) {
-      var derived, keys;
+      var keys;
 
       keys = Crypto.pbkdf2(password, this.salt, this.iterations);
-      derived = {
-        encryption: Crypto.toBuffer(keys.slice(0, 64)),
-        hmac: Crypto.toBuffer(keys.slice(64))
-      };
-      return new Opdata(derived.encryption, derived.hmac);
+      return new Opdata(keys.slice(0, 32), keys.slice(32));
     };
 
-    /**
+    /*
      * Load data from a .cloudKeychain folder
-     * @param  {String} filepath The filepath of the .cloudKeychain file
-     * @throws {Error} If profile.js can't be found
+     * - filepath {string} : The filepath of the .cloudKeychain file
+     * ! if profile.js can't be found
+     * > this
     */
 
 
@@ -178,8 +175,10 @@
 
     /**
      * Load data from profile.js into keychain.
-     * @param {String} filepath The path to the profile.js file.
-     * @param {Boolean} [rawData=false] If set to true, 'filepath' will be considered the actual profile data to load from.
+     * - filepath {string} : The path to the profile.js file.
+     * - [rawData=false] {boolean} : If set to true, 'filepath' will be
+     *   considered the actual profile data to load from.
+     * > this
     */
 
 
@@ -212,7 +211,7 @@
 
     /**
      * Load folders
-     * @param  {String} filepath The path to the folders.js file.
+     * - filepath {string} : The path to the folders.js file.
     */
 
 
@@ -220,7 +219,8 @@
 
     /**
      * This loads the item data from a band file into the keychain.
-     * @param  {Array} bands An array of filepaths to each band file
+     * - bands {array} : An array of filepaths to each band file
+     * > this
     */
 
 
@@ -242,16 +242,20 @@
 
     /**
      * Load attachments
-     * @param  {Array} attachments An array of filepaths to each attachment file
+     * - attachments {Array} : An array of filepaths to each attachment file
     */
 
 
     Keychain.prototype.loadAttachment = function(attachments) {};
 
     /**
-     * Change the keychain master password. Since the derived keys and raw key data aren't stored, the current password must be supplied to decrypt this data again. Though slower, this is more secure than keeping this data in memory.
-     * @param {string} currentPassword The current master password.
-     * @param {string} newPassword The password to change to.
+     * Change the keychain master password. Since the derived keys and raw key
+     * data aren't stored, the current password must be supplied to decrypt this
+     * data again. Though slower, this is more secure than keeping this data in
+     * memory.
+     * - currentPassword {string} : The current master password.
+     * - newPassword {string} : The password to change to.
+     * > this
     */
 
 
@@ -272,12 +276,9 @@
      * decrypt the masterKey and overviewKey. The master password and super keys
      * are then forgotten as they are no longer needed and keeping them in memory
      * will only be a security risk.
-     *
-     * @param  {String} password The master password to unlock the keychain
-     *                           with.
-     * @return {Boolean} Whether or not the keychain was unlocked successfully.
-     *                   Which is an easy way to see if the master password was
-     *                   correct.
+     * Use @unlocked to check if it was the right password.
+     * - password {string} : The master password to unlock the keychain with.
+     * > this
     */
 
 
@@ -285,16 +286,16 @@
       var master, overview, profileKey,
         _this = this;
 
-      if (this.unlocked) {
+      if (this.unlocked === true) {
         console.log('Keychain already unlocked...');
-        return;
+        return this;
       }
       profileKey = this._deriveKeys(password);
       master = profileKey.decrypt('profileKey', this.encrypted.masterKey);
       if (!master.length) {
         console.error('Could not decrypt master key');
         this.unlocked = false;
-        return false;
+        return this;
       }
       overview = profileKey.decrypt('profileKey', this.encrypted.overviewKey);
       if (!overview.length) {
@@ -319,7 +320,8 @@
     /**
      * Lock the keychain. This discards all currently decrypted keys, overview
      * data and any decrypted item details.
-     * @param {Boolean} autolock Whether the keychain was locked automatically.
+     * - autolock {Boolean} : Whether the keychain was locked automatically.
+     * > this
     */
 
 
@@ -330,7 +332,8 @@
       this.overview = void 0;
       this.items = {};
       this.unlocked = false;
-      return this.event.emit('lock:after', autolock);
+      this.event.emit('lock:after', autolock);
+      return this;
     };
 
     /**
@@ -348,7 +351,6 @@
     /**
      * This is run every second, to check to see if the timer has expired. If it
      * has it then locks the keychain.
-     * @private
     */
 
 
@@ -368,8 +370,8 @@
 
     /**
      * Expose Item.create so you only have to include this one file
-     * @param {Object} data Item data.
-     * @return {Object} An item instance.
+     * - data {Object} : Item data.
+     * > object - An item instance.
     */
 
 
@@ -379,7 +381,8 @@
 
     /**
      * Add an item to the keychain
-     * @param {Object} item The item to add to the keychain
+     * - item {Object} : The item to add to the keychain
+     * > this
     */
 
 
@@ -393,8 +396,8 @@
 
     /**
      * This returns an item with the matching UUID
-     * @param  {String} uuid The UUID to find the Item of
-     * @return {Item} The item matching the UUID
+     * - uuid {string} : The UUID to find the Item of
+     * > item
     */
 
 
@@ -403,7 +406,9 @@
     };
 
     /**
-     * Search through all items
+     * Search through all items, does not include deleted items
+     * - query {string} - the search query
+     * > array - items that match the query
     */
 
 
@@ -428,25 +433,25 @@
     /**
      * Loop through all the items in the keychain, and pass each one to a
      * function.
-     * @param  {Function} fn The function to pass each item to
+     * - fn  {Function} : The function to pass each item to
+     * > this
     */
 
 
     Keychain.prototype.eachItem = function(fn) {
-      var item, uuid, _ref, _results;
+      var item, uuid, _ref;
 
       _ref = this.items;
-      _results = [];
       for (uuid in _ref) {
         item = _ref[uuid];
-        _results.push(fn(item));
+        fn(item);
       }
-      return _results;
+      return this;
     };
 
     /**
      * Generate the profile.js file
-     * @return {String} The profile.js file
+     * > string - the profile.js file contents as json
     */
 
 
@@ -470,7 +475,7 @@
 
     /**
      * This exports all the items currently in the keychain into band files.
-     * @return {Object} The band files
+     * > object - the band files as { filename: contents }
     */
 
 

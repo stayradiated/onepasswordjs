@@ -95,9 +95,9 @@
     },
     /**
      * Create a hash digest of data.
-     * - data {String|Buffer} : The data to hash.
-     * - keysize {Number} : The type of hash to use, e.g. 256 or 512.
-     * - [encoding] {String} : Data encoding to return as. If left unspecified,
+     * - data {string|buffer} : The data to hash.
+     * - keysize {number} : The type of hash to use, e.g. 256 or 512.
+     * - [encoding] {string} : Data encoding to return as. If left unspecified,
      *   it will return as a buffer.
      * > buffer
     */
@@ -129,15 +129,13 @@
     },
     /**
      * Remove padding from text.
-     * - plaintextLength {Number} : The length of the plaintext in bytes.
-     * - data {String|Buffer} : The data to remove the padding from. Can be a
-     *   hex string or a buffer.
-     * > string
+     * - plaintextLength {number} : The length of the plaintext in bytes.
+     * - data {buffer} : The data to remove the padding from. Can be a hex string
+     *   or a buffer.
+     * > buffer
     */
 
     unpad: function(plaintextLength, data) {
-      data = this.toHex(data);
-      plaintextLength *= 2;
       return data.slice(-plaintextLength);
     },
     /**

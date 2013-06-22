@@ -15,9 +15,9 @@
   Item = (function() {
     /**
      * Create a new Item.
-     * @param {Kecyhain} keychain The keychain to encrypt the item with.
-     * @param {Object} data The data to add to the Item.
-     * @return {Item} The item.
+     * - keychain {kecyhain} : The keychain to encrypt the item with.
+     * - data {object} : The data to add to the Item.
+     * > item - the item.
     */
     Item.create = function(keychain, data) {
       var item, timeNow;
@@ -66,8 +66,7 @@
 
     /**
      * Create a new Item instance.
-     * @constructor
-     * @param {Object} [attrs] Any attributes to load into the item
+     * - [attrs] {object} : Any attributes to load into the item
     */
 
 
@@ -90,8 +89,8 @@
 
     /**
      * Load attributes from the exported format
-     * @param {Object} data Data to load
-     * @return {this}
+     * - data {object} : Data to load
+     * > this
     */
 
 
@@ -121,8 +120,9 @@
     };
 
     /**
-     * Lock the item.
-     * Deletes the unencrypted data.
+     * Lock the item. Deletes the unencrypted data.
+     * - type {string} : what to lock - all, keys, details or overview
+     * > this
     */
 
 
@@ -152,7 +152,9 @@
 
     /**
      * Decrypt the item data.
-     * @param  {string} type The part of the item to unlock. Can be `all`, `keys`, `details` or `overview`.
+     * - type {string} : The part of the item to unlock. Can be all, keys, 
+     *   details or overview.
+     * > this, keys, details,or overveiw
     */
 
 
@@ -167,7 +169,7 @@
           return this;
         case 'keys':
           keys = this.keychain.master.decrypt('itemKey', this.encrypted.keys);
-          this.keys = new Opdata(keys[0], keys[1]);
+          this.keys = new Opdata(new Buffer(keys[0], 'hex'), new Buffer(keys[1], 'hex'));
           this.keysUnlocked = true;
           return this.keys;
         case 'details':
@@ -188,7 +190,8 @@
 
     /**
      * Encrypt the item data.
-     * @param  {string} type The part of the item to encrypt. Can be `all`, `keys`, `details` or `overview`.
+     * - type {string} : The part of the item to encrypt. Can be all, keys,
+     *   details or overview.
     */
 
 
@@ -224,8 +227,8 @@
     /**
      * Calculate the hmac of the item
      * TODO: Find out why it doesn't work...
-     * @param {Buffer} key The master hmac key
-     * @return {String} The hmac of the item encoded in hex
+     * - key {Buffer} : The master hmac key
+     * > string - The hmac of the item encoded in hex
     */
 
 
@@ -249,7 +252,7 @@
 
     /**
      * Turn an item into a JSON object.
-     * @return {Object} The JSON object.
+     * > Object - the JSON object.
     */
 
 
@@ -271,8 +274,8 @@
 
     /**
      * Check to see if an item matches a query. Used for filtering items.
-     * @param {String} query The search query.
-     * @return {Boolean} Whether or not the item matches the query.
+     * - query {string} : The search query.
+     * > Boolean - Whether or not the item matches the query.
     */
 
 

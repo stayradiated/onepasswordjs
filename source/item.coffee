@@ -10,9 +10,9 @@ class Item
 
   ###*
    * Create a new Item.
-   * @param {Kecyhain} keychain The keychain to encrypt the item with.
-   * @param {Object} data The data to add to the Item.
-   * @return {Item} The item.
+   * - keychain {kecyhain} : The keychain to encrypt the item with.
+   * - data {object} : The data to add to the Item.
+   * > item - the item.
   ###
   @create: (keychain, data) =>
 
@@ -58,8 +58,7 @@ class Item
 
   ###*
    * Create a new Item instance.
-   * @constructor
-   * @param {Object} [attrs] Any attributes to load into the item
+   * - [attrs] {object} : Any attributes to load into the item
   ###
   constructor: (@keychain, attrs) ->
     @keysUnlocked = false
@@ -73,11 +72,13 @@ class Item
 
   ###*
    * Load attributes from the exported format
-   * @param {Object} data Data to load
-   * @return {this}
+   * - data {object} : Data to load
+   * > this
   ###
   load: (data) ->
-    for key in ['category', 'created', 'fave', 'folder', 'tx', 'trashed', 'updated', 'uuid']
+
+    for key in ['category', 'created', 'fave', 'folder', 'tx', 'trashed',
+                'updated', 'uuid']
       if data[key]? then @[key] = data[key]
 
     # Convert to base64
@@ -94,8 +95,9 @@ class Item
 
 
   ###*
-   * Lock the item.
-   * Deletes the unencrypted data.
+   * Lock the item. Deletes the unencrypted data.
+   * - type {string} : what to lock - all, keys, details or overview
+   * > this
   ###
   lock: (type) ->
     switch type
@@ -122,7 +124,9 @@ class Item
 
   ###*
    * Decrypt the item data.
-   * @param  {string} type The part of the item to unlock. Can be `all`, `keys`, `details` or `overview`.
+   * - type {string} : The part of the item to unlock. Can be all, keys, 
+   *   details or overview.
+   * > this, keys, details,or overveiw
   ###
   unlock: (type) ->
     switch type
@@ -134,7 +138,10 @@ class Item
 
       when 'keys'
         keys = @keychain.master.decrypt('itemKey', @encrypted.keys)
-        @keys = new Opdata(keys[0], keys[1])
+        @keys = new Opdata(
+          new Buffer(keys[0], 'hex') # item encryption key
+          new Buffer(keys[1], 'hex') # item hmac key
+        )
         @keysUnlocked = true
         return @keys
 
@@ -154,7 +161,8 @@ class Item
 
   ###*
    * Encrypt the item data.
-   * @param  {string} type The part of the item to encrypt. Can be `all`, `keys`, `details` or `overview`.
+   * - type {string} : The part of the item to encrypt. Can be all, keys,
+   *   details or overview.
   ###
   encrypt: (type) ->
     switch type
@@ -186,8 +194,8 @@ class Item
   ###*
    * Calculate the hmac of the item
    * TODO: Find out why it doesn't work...
-   * @param {Buffer} key The master hmac key
-   * @return {String} The hmac of the item encoded in hex
+   * - key {Buffer} : The master hmac key
+   * > string - The hmac of the item encoded in hex
   ###
   calculateHmac: (key) ->
     dataToHmac = ""
@@ -204,7 +212,7 @@ class Item
 
   ###*
    * Turn an item into a JSON object.
-   * @return {Object} The JSON object.
+   * > Object - the JSON object.
   ###
   toJSON: ->
     category: @category
@@ -221,8 +229,8 @@ class Item
 
   ###*
    * Check to see if an item matches a query. Used for filtering items.
-   * @param {String} query The search query.
-   * @return {Boolean} Whether or not the item matches the query.
+   * - query {string} : The search query.
+   * > Boolean - Whether or not the item matches the query.
   ###
   match: (query) =>
     query = query.toLowerCase()

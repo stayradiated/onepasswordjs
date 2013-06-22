@@ -26,10 +26,10 @@ class Keychain
 
   ###*
    * Create a new keychain
-   * - password  {String} : The master password for the keychain.
-   * - [settings] {Object} : Extra options for the keychain, such as the hint
+   * - password  {string} : The master password for the keychain.
+   * - [settings] {object} : Extra options for the keychain, such as the hint
    *   and number of iterations
-   * > {Keychain} - a new Keychain object
+   * > Keychain - a new Keychain object
   ###
 
   @create: (password, settings={}) ->
@@ -57,39 +57,45 @@ class Keychain
       master: Crypto.randomBytes(256)
       overview: Crypto.randomBytes(64)
 
-    keys =
-      master: Crypto.hash(raw.master, 512, 'hex')
-      overview: Crypto.hash(raw.overview, 512, 'hex')
-
     superKey = keychain._deriveKeys(password)
 
     keychain.encrypted =
       masterKey: superKey.encrypt('profileKey', raw.master)
       overviewKey: superKey.encrypt('profileKey', raw.overview)
 
-    keychain.master = new Opdata(keys.master[0...64], keys.master[64..])
-    keychain.overview = new Opdata(keys.overview[0...64], keys.overview[64..])
+    keys =
+      master: Crypto.hash(raw.master, 512)
+      overview: Crypto.hash(raw.overview, 512)
+
+    keychain.master = new Opdata(
+      keys.master[0..31] # master encryption key
+      keys.master[32..]  # master hmac key
+    )
+    keychain.overview = new Opdata(
+      keys.overview[0..31] # overview encryption key
+      keys.overview[32..]  # overview hmac key
+    )
 
     return keychain
 
 
   ###*
    * Constructs a new Keychain
-   * - [attrs] {Object} : Load items
+   * - [attrs] {object} : Load items
   ###
   constructor: (attrs) ->
     @AUTOLOCK_LENGTH = 1 * 60 * 1000 # 1 minute
-    @event = new EventEmitter()
     @profileName = 'default'
     @items = {}
     @unlocked = false
+    @event = new EventEmitter()
     if attrs then @loadAttrs(attrs)
 
 
   ###*
    * Easy way to load data into a keychain
-   * - {Object} attrs The attributes you want to load
-   * > {this}
+   * - {object} attrs The attributes you want to load
+   * > this - so it can be chained
   ###
   loadAttrs: (attrs) ->
     @[key] = attr for key, attr of attrs
@@ -97,22 +103,23 @@ class Keychain
 
 
   ###*
-   * Derive super keys from password using PBKDF2
-   * - {String} password The master password.
-   * > {Opdata} - the derived keys.
+   * Derive the 'super' keys from password using PBKDF2
+   * - {string} password The master password.
+   * > Opdata - the derived keys.
   ###
   _deriveKeys: (password) ->
-    keys = Crypto.pbkdf2(password, @salt, @iterations)
-    derived =
-      encryption: Crypto.toBuffer(keys[0...64])
-      hmac: Crypto.toBuffer(keys[64..])
-    return new Opdata(derived.encryption, derived.hmac)
+    keys = Crypto.pbkdf2( password, @salt, @iterations )
+    return new Opdata(
+      keys[0..31] # encryption key
+      keys[32..]  # hmac key
+    )
 
 
-  ###*
+  ###
    * Load data from a .cloudKeychain folder
-   * @param  {String} filepath The filepath of the .cloudKeychain file
-   * @throws {Error} If profile.js can't be found
+   * - filepath {string} : The filepath of the .cloudKeychain file
+   * ! if profile.js can't be found
+   * > this
   ###
   load: (@keychainPath) ->
 
@@ -147,8 +154,10 @@ class Keychain
 
   ###*
    * Load data from profile.js into keychain.
-   * @param {String} filepath The path to the profile.js file.
-   * @param {Boolean} [rawData=false] If set to true, 'filepath' will be considered the actual profile data to load from.
+   * - filepath {string} : The path to the profile.js file.
+   * - [rawData=false] {boolean} : If set to true, 'filepath' will be
+   *   considered the actual profile data to load from.
+   * > this
   ###
   loadProfile: (filepath, rawData) ->
 
@@ -179,7 +188,7 @@ class Keychain
 
   ###*
    * Load folders
-   * @param  {String} filepath The path to the folders.js file.
+   * - filepath {string} : The path to the folders.js file.
   ###
   loadFolders: (filepath) ->
     # TODO: Implements folders ...
@@ -187,7 +196,8 @@ class Keychain
 
   ###*
    * This loads the item data from a band file into the keychain.
-   * @param  {Array} bands An array of filepaths to each band file
+   * - bands {array} : An array of filepaths to each band file
+   * > this
   ###
   loadBands: (bands) ->
     for filepath in bands
@@ -205,16 +215,20 @@ class Keychain
 
   ###*
    * Load attachments
-   * @param  {Array} attachments An array of filepaths to each attachment file
+   * - attachments {Array} : An array of filepaths to each attachment file
   ###
   loadAttachment: (attachments) ->
     # TODO: Implement attachments ...
 
 
   ###*
-   * Change the keychain master password. Since the derived keys and raw key data aren't stored, the current password must be supplied to decrypt this data again. Though slower, this is more secure than keeping this data in memory.
-   * @param {string} currentPassword The current master password.
-   * @param {string} newPassword The password to change to.
+   * Change the keychain master password. Since the derived keys and raw key
+   * data aren't stored, the current password must be supplied to decrypt this
+   * data again. Though slower, this is more secure than keeping this data in
+   * memory.
+   * - currentPassword {string} : The current master password.
+   * - newPassword {string} : The password to change to.
+   * > this
   ###
   changePassword: (currentPassword, newPassword) ->
     currentKey = @_deriveKeys(currentPassword)
@@ -231,18 +245,15 @@ class Keychain
    * decrypt the masterKey and overviewKey. The master password and super keys
    * are then forgotten as they are no longer needed and keeping them in memory
    * will only be a security risk.
-   *
-   * @param  {String} password The master password to unlock the keychain
-   *                           with.
-   * @return {Boolean} Whether or not the keychain was unlocked successfully.
-   *                   Which is an easy way to see if the master password was
-   *                   correct.
+   * Use @unlocked to check if it was the right password.
+   * - password {string} : The master password to unlock the keychain with.
+   * > this
   ###
   unlock: (password) ->
 
-    if @unlocked
+    if @unlocked is true
       console.log 'Keychain already unlocked...'
-      return
+      return this
 
     # Derive keys
     profileKey = @_deriveKeys(password)
@@ -252,7 +263,7 @@ class Keychain
     if not master.length
       console.error 'Could not decrypt master key'
       @unlocked = false
-      return false
+      return this
 
     # Decrypt overview key
     overview = profileKey.decrypt('profileKey', @encrypted.overviewKey)
@@ -266,7 +277,7 @@ class Keychain
     @overview = new Opdata(overview[0], overview[1])
 
     # Decrypt overview data
-    @eachItem (item) => item.unlock('overview')
+    @eachItem (item) -> item.unlock('overview')
 
     # Unlock has been successful
     @unlocked = true
@@ -282,7 +293,8 @@ class Keychain
   ###*
    * Lock the keychain. This discards all currently decrypted keys, overview
    * data and any decrypted item details.
-   * @param {Boolean} autolock Whether the keychain was locked automatically.
+   * - autolock {Boolean} : Whether the keychain was locked automatically.
+   * > this
   ###
   lock: (autolock) ->
     @event.emit('lock:before', autolock)
@@ -292,6 +304,7 @@ class Keychain
     @items = {}
     @unlocked = false
     @event.emit('lock:after', autolock)
+    return this
 
 
   ###*
@@ -307,7 +320,6 @@ class Keychain
   ###*
    * This is run every second, to check to see if the timer has expired. If it
    * has it then locks the keychain.
-   * @private
   ###
   _autolock: =>
     return unless @unlocked
@@ -320,8 +332,8 @@ class Keychain
 
   ###*
    * Expose Item.create so you only have to include this one file
-   * @param {Object} data Item data.
-   * @return {Object} An item instance.
+   * - data {Object} : Item data.
+   * > object - An item instance.
   ###
   createItem: (data) ->
     Item.create(this, data)
@@ -329,7 +341,8 @@ class Keychain
 
   ###*
    * Add an item to the keychain
-   * @param {Object} item The item to add to the keychain
+   * - item {Object} : The item to add to the keychain
+   * > this
   ###
   addItem: (item) ->
     if not (item instanceof Item)
@@ -340,15 +353,17 @@ class Keychain
 
   ###*
    * This returns an item with the matching UUID
-   * @param  {String} uuid The UUID to find the Item of
-   * @return {Item} The item matching the UUID
+   * - uuid {string} : The UUID to find the Item of
+   * > item
   ###
   getItem: (uuid) ->
     return @items[uuid]
 
 
   ###*
-   * Search through all items
+   * Search through all items, does not include deleted items
+   * - query {string} - the search query
+   * > array - items that match the query
   ###
   findItems: (query) ->
     items = []
@@ -362,16 +377,18 @@ class Keychain
   ###*
    * Loop through all the items in the keychain, and pass each one to a
    * function.
-   * @param  {Function} fn The function to pass each item to
+   * - fn  {Function} : The function to pass each item to
+   * > this
   ###
   eachItem: (fn) ->
     for uuid, item of @items
       fn(item)
+    return this
 
 
   ###*
    * Generate the profile.js file
-   * @return {String} The profile.js file
+   * > string - the profile.js file contents as json
   ###
   exportProfile: ->
     data =
@@ -385,23 +402,26 @@ class Keychain
       uuid:          @uuid
       overviewKey:   @encrypted.overviewKey.toString('base64')
       createdAt:     @createdAt
-    PROFILE_PREFIX + JSON.stringify(data) + PROFILE_SUFFIX
+    return PROFILE_PREFIX + JSON.stringify(data) + PROFILE_SUFFIX
 
 
   ###*
    * This exports all the items currently in the keychain into band files.
-   * @return {Object} The band files
+   * > object - the band files as { filename: contents }
   ###
   exportBands: ->
 
     bands = {}
 
+    # Sort items into groups based on the first char of its UUID
     for uuid, item of @items
       id = uuid[0...1]
       bands[id] ?= []
       bands[id].push(item)
 
     files = {}
+
+    # Generate band files and filenames
     for id, items of bands
       data = {}
       for item in items
