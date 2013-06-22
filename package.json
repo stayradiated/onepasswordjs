@@ -11,9 +11,6 @@
     "url": "http://github.com/stayradiated/onepasswordjs/issues"
   },
   "main": "js/keychain.js",
-  "bin": {
-    "onepass": "./bin/onepass"
-  },
   "scripts": {
     "test": "mocha --compilers coffee:coffee-script tests"
   },
@@ -25,10 +22,12 @@
     "cloud",
     "keychain"
   ],
-  "dependencies": {
-    "commander": "1.2.x"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "mocha": "1.11.x"
+    "grunt": "~0.4.0",
+    "grunt-contrib-coffee": "~0.5.0",
+    "grunt-contrib-watch": "~0.3.1",
+    "mocha": "1.7.x",
+    "grunt-gluejs": "0.0.1"
   }
 }

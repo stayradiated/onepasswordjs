@@ -6,7 +6,7 @@ describe('Create Keychain', function() {
   var keychain;
 
   it('should create a new Keychain', function() {
-    keychain = Keychain.create('password', {passwordHint: 'hint'});
+    keychain = Keychain.create('password', 'hint');
   });
 
   it('should create a new Item', function() {
@@ -19,7 +19,7 @@ describe('Create Keychain', function() {
     };
     var item = keychain.createItem(data);
     keychain.addItem(item);
-    assert.equal(keychain.getItem(item.uuid).overview.title, data.title);
+    assert.equal(keychain.getItem(item.uuid).overview.title, data.title)
   });
 
   it('should export the band files', function() {
@@ -43,7 +43,7 @@ describe('Existing Keychain', function() {
   it('should decrypt an item', function() {
     var uuid = Object.keys(keychain.items)[0];
     var item = keychain.getItem(uuid);
-    item.unlock('details');
+    item.unlock('details')
   });
 
   it('should edit and save an item', function() {
@@ -76,5 +76,3 @@ describe('Existing Keychain', function() {
   });
 
 });
-
-
