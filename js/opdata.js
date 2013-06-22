@@ -57,9 +57,8 @@
       }
       dataToHmac = Crypto.toBuffer(object.slice(0, -64));
       expectedHmac = object.slice(-64);
-      objectHmac = Crypto.hmac(dataToHmac, this.hmac, 256);
+      objectHmac = Crypto.hmac(dataToHmac, this.hmac, 256, 'hex');
       if (objectHmac !== expectedHmac) {
-        console.error('Hmac does not match');
         return false;
       }
       rawtext = Crypto.decrypt(ciphertext, this.encryption, iv, 'hex');
@@ -74,7 +73,7 @@
         case 'itemKey':
           return [rawtext.slice(0, 64), rawtext.slice(64)];
         case 'profileKey':
-          keys = Crypto.hash(plaintext, 512);
+          keys = Crypto.hash(plaintext, 512, 'hex');
           return [keys.slice(0, 64), keys.slice(64)];
       }
     };
@@ -106,7 +105,6 @@
         dataToHmac = Crypto.concat([header, endian, iv, ciphertext]);
       }
       hmac = Crypto.hmac(dataToHmac, this.hmac, 256);
-      hmac = Crypto.toBuffer(hmac);
       return Crypto.concat([dataToHmac, hmac]);
     };
 

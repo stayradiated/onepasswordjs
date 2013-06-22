@@ -5,9 +5,9 @@
  * CloudKeychain libarary.
  *
  * @example
- * 1password open ./data/sample.keychain
- * 1password create ./data
- * 1password migrate ./data/my.keychain ./data/new.keychain
+ * onepass open ./data/sample.keychain
+ * onepass create ./data
+ * onepass migrate ./data/my.keychain ./data/new.keychain
  *
 */
 
@@ -17,6 +17,9 @@
   var fs = require('fs');
   var Keychain = require('../js/keychain');
   var keychain = null;
+
+  // Save some chars
+  var log = console.log.bind(console);
 
   var init = function() {
 
@@ -29,7 +32,7 @@
     program
       .command('open [filepath]')
       .description('Open an existing keychain')
-      .action(openKeychain);
+      .action(fn.openKeychain);
 
     program
       .command('create [filepath]')
@@ -40,106 +43,126 @@
       .command('migrate [in] [out]')
       .description('Change the password for a keychain')
       .action(function(input, output) {
-        console.log(input, output);
+        log(input, output);
       });
 
     program.parse(process.argv);
 
   };
 
-  var unlock = function(fn) {
-    return program.prompt('Password: ', function(password) {
-      if (keychain.unlock(password)) {
-        return fn();
-      } else {
-        console.log('Incorrect password...\n');
-        return unlock(fn);
-      }
-    });
-  };
 
-  var listItems = function() {
-    console.log('\n===== ITEMS =====');
-    keychain.eachItem(function(item) {
-      return console.log("  - " + item.overview.title);
-    });
-    return console.log('=================\n');
-  };
-
-  var displayItem = function(item, details) {
-    var field, section, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
-    console.log("Category: ", item.category);
-    console.log(JSON.stringify(item.overview, null, 2));
-    if (details.sections != null) {
-      _ref = details.sections;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        section = _ref[_i];
-        console.log("\n=== " + section.title + " ===");
-        _ref1 = section.fields;
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          field = _ref1[_j];
-          console.log("" + field.t + ": " + field.v);
+  var fn = {
+    
+    // Unlock the keychain
+    unlock: function(callback, count) {
+      if (count === undefined) count = 3;
+      program.password('Password: ', '*', function(password) {
+        if (keychain.unlock(password)) {
+          callback();
+        } else {
+          log('Incorrect password...\n');
+          if (--count > 0) fn.unlock(callback, count);
         }
-      }
-    } else if (details.fields != null) {
-      console.log('\n');
-      _ref2 = details.fields;
-      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-        field = _ref2[_k];
-        console.log("" + field.name + ": " + field.value);
-      }
-    } else if (details.notesPlain != null) {
-      console.log("\nNotes: " + details.notesPlain);
-    } else {
-      console.log(JSON.stringify(details, null, 2));
-    }
-    return console.log('\n');
-  };
+      });
+    },
 
-  var openItem = function() {
-    return program.prompt("Search for item: ", function(query) {
-      var details, item, results;
-      keychain.rescheduleAutoLock();
-      if (query === "list") {
-        listItems();
-        return openItem();
-      }
-      results = keychain.findItems(query);
-      if (results.length > 0) {
-        item = results[0];
-        details = item.unlock('details');
-        displayItem(item, details);
+    // Print a list of all the items
+    showItemList: function() {
+      log('\n===== ITEMS =====');
+      keychain.eachItem(function(item) {
+        return log(' - ' +  item.overview.title);
+      });
+      return log('=================\n');
+    },
+   
+    // Print the item details
+    showItem: function(item, details) {
+
+      log('Category: ', item.category);
+      log(JSON.stringify(item.overview, null, 2));
+
+      if (details.sections != null) {
+        var sections = details.sections;
+
+        for (var i = 0, len = sections.length; i < len; i++) {
+          var section = sections[i];
+          var fields = section.fields;
+          log('\n=== ' + section.title + ' ===');
+
+          for (var j = 0, len = fields.length; j < len; j++) {
+            var field = fields[j];
+            log(field.t + ': ' + field.v);
+          }
+        }
+
+      } else if (details.fields != null) {
+        log('\n');
+        var fields = details.fields;
+
+        for (var i = 0, len = fields.length; i < len; i++) {
+          var field = fields[i];
+          log(field.name + ': ' + field.value);
+        }
+
+      } else if (details.notesPlain != null) {
+        log("\nNotes: " + details.notesPlain);
+
       } else {
-        console.log('Nothing found... Hint: Enter `list` to display all');
+        log(JSON.stringify(details, null, 2));
       }
-      return openItem();
-    });
-  };
 
-  var createItem = function(keychain, fn) {
-    return program.prompt({
-      title: "Item Title: ",
-      username: "Item Name: ",
-      password: "Item Password: ",
-      url: "Item URL: ",
-      notes: "Item Notes: "
-    }, function(data) {
-      var item;
-      item = Keychain.createItem(data, keychain.master, keychain.overview);
-      return fn(keychain.addItem(item).exportBands());
-    });
-  };
+      return log('\n');
+    },
 
-  var openKeychain = function(filepath) {
-    keychain = new Keychain().load(filepath);
-    keychain.on('lock', function() {
-      console.log('\n Locking the Keychain \n');
-      return unlock();
-    });
-    unlock(function() {
-      listItems();
-      return openItem();
-    });
+    search: function() {
+      program.prompt('Search for item: ', function(query) {
+        keychain.rescheduleAutoLock();
+
+        if (query === "list") {
+          fn.showItemList(); // List items 
+          return fn.search(); // Reload this page
+        }
+
+        results = keychain.findItems(query);
+        if (results.length > 0) {
+          item = results[0];
+          details = item.unlock('details');
+          fn.showItem(item, details);
+
+        } else {
+          log('Nothing found... Hint: Enter `list` to display all');
+        }
+
+        fn.search();
+      });
+    },
+
+
+    createItem:  function(keychain, callback) {
+      program.prompt({
+        title: 'Item Title: ',
+        username: 'Item Name: ',
+        password: 'Item Password: ',
+        url: 'Item URL: ',
+        notes: 'Item Notes: '
+      }, function(data) {
+        var item = Keychain.createItem(data, keychain.master, keychain.overview);
+        callback(keychain.addItem(item).exportBands());
+      });
+    },
+
+    openKeychain: function(filepath) {
+      // Set keychain
+      keychain = new Keychain().load(filepath);
+      keychain.on('lock', function() {
+        log('\nLocking the Keychain\n');
+      });
+      fn.unlock(function() {
+        fn.showItemList();
+        fn.search();
+      });
+    }
+
   };
 
   var newKeychain = function(filepath) {
