@@ -121,33 +121,39 @@ class Keychain
    * ! if profile.js can't be found
    * > this
   ###
-  load: (@keychainPath) ->
+  load: (@keychainPath, callback) ->
 
-    @profileFolder = "#{@keychainPath}/#{@profileName}"
-    folderContents = fs.readdirSync(@profileFolder)
-    profile = null
-    folder = null
-    bands = []
-    attachments = []
+    @profileFolder = @keychainPath + '/' + @profileName
 
-    for filename in folderContents
-      if filename is "profile.js"
-        profile = "#{@profileFolder}/profile.js"
-      else if filename is "folders.js"
-        folders = "#{@profileFolder}/folders.js"
-      else if filename.match(/^band_[0-9A-F]\.js$/)
-        bands.push("#{@profileFolder}/#{filename}")
-      else if filename.match(/^[0-9A-F]{32}_[0-9A-F]{32}\.attachment$/)
-        attachments.push(filename)
+    fs.readdir @profileFolder, (err, folderContents) =>
 
-    if profile?
-      @loadProfile(profile)
-    else
-      throw new Error 'Couldn\'t find profile.js'
+      if err? then throw err
 
-    if folders? then @loadFolders(folders)
-    if bands.length > 0 then @loadBands(bands)
-    if attachments.length > 0 then @loadAttachment(attachments)
+      profile = null
+      folder = null
+      bands = []
+      attachments = []
+
+      for filename in folderContents
+        if filename is 'profile.js'
+          profile = @profileFolder + '/profile.js'
+        else if filename is 'folders.js'
+          folders = @profileFolder + '/folders.js'
+        else if filename.match(/^band_[0-9A-F]\.js$/)
+          bands.push(@profileFolder + '/' + filename)
+        else if filename.match(/^[0-9A-F]{32}_[0-9A-F]{32}\.attachment$/)
+          attachments.push(filename)
+
+      if profile?
+        @loadProfile(profile)
+      else
+        throw new Error 'Couldn\'t find profile.js'
+
+      if folders? then @loadFolders(folders)
+      if bands.length > 0 then @loadBands(bands)
+      if attachments.length > 0 then @loadAttachment(attachments)
+
+      if callback? then callback()
 
     return this
 
@@ -370,7 +376,7 @@ class Keychain
     for uuid, item of @items
       if item.trashed then continue
       if item.match(query) is null then continue
-      items.push[item]
+      items.push(item)
     return items
 
 

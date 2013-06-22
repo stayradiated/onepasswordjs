@@ -280,8 +280,10 @@
 
 
     Item.prototype.match = function(query) {
-      query = query.toLowerCase();
-      return this.overview.title.toLowerCase().match(query);
+      var regex;
+
+      regex = new RegExp(query, 'i');
+      return this.overview.title.match(regex);
     };
 
     return Item;

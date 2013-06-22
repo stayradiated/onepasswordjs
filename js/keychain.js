@@ -134,42 +134,51 @@
     */
 
 
-    Keychain.prototype.load = function(keychainPath) {
-      var attachments, bands, filename, folder, folderContents, folders, profile, _i, _len;
+    Keychain.prototype.load = function(keychainPath, callback) {
+      var _this = this;
 
       this.keychainPath = keychainPath;
-      this.profileFolder = "" + this.keychainPath + "/" + this.profileName;
-      folderContents = fs.readdirSync(this.profileFolder);
-      profile = null;
-      folder = null;
-      bands = [];
-      attachments = [];
-      for (_i = 0, _len = folderContents.length; _i < _len; _i++) {
-        filename = folderContents[_i];
-        if (filename === "profile.js") {
-          profile = "" + this.profileFolder + "/profile.js";
-        } else if (filename === "folders.js") {
-          folders = "" + this.profileFolder + "/folders.js";
-        } else if (filename.match(/^band_[0-9A-F]\.js$/)) {
-          bands.push("" + this.profileFolder + "/" + filename);
-        } else if (filename.match(/^[0-9A-F]{32}_[0-9A-F]{32}\.attachment$/)) {
-          attachments.push(filename);
+      this.profileFolder = this.keychainPath + '/' + this.profileName;
+      fs.readdir(this.profileFolder, function(err, folderContents) {
+        var attachments, bands, filename, folder, folders, profile, _i, _len;
+
+        if (err != null) {
+          throw err;
         }
-      }
-      if (profile != null) {
-        this.loadProfile(profile);
-      } else {
-        throw new Error('Couldn\'t find profile.js');
-      }
-      if (folders != null) {
-        this.loadFolders(folders);
-      }
-      if (bands.length > 0) {
-        this.loadBands(bands);
-      }
-      if (attachments.length > 0) {
-        this.loadAttachment(attachments);
-      }
+        profile = null;
+        folder = null;
+        bands = [];
+        attachments = [];
+        for (_i = 0, _len = folderContents.length; _i < _len; _i++) {
+          filename = folderContents[_i];
+          if (filename === 'profile.js') {
+            profile = _this.profileFolder + '/profile.js';
+          } else if (filename === 'folders.js') {
+            folders = _this.profileFolder + '/folders.js';
+          } else if (filename.match(/^band_[0-9A-F]\.js$/)) {
+            bands.push(_this.profileFolder + '/' + filename);
+          } else if (filename.match(/^[0-9A-F]{32}_[0-9A-F]{32}\.attachment$/)) {
+            attachments.push(filename);
+          }
+        }
+        if (profile != null) {
+          _this.loadProfile(profile);
+        } else {
+          throw new Error('Couldn\'t find profile.js');
+        }
+        if (folders != null) {
+          _this.loadFolders(folders);
+        }
+        if (bands.length > 0) {
+          _this.loadBands(bands);
+        }
+        if (attachments.length > 0) {
+          _this.loadAttachment(attachments);
+        }
+        if (callback != null) {
+          return callback();
+        }
+      });
       return this;
     };
 
@@ -425,7 +434,7 @@
         if (item.match(query) === null) {
           continue;
         }
-        items.push[item];
+        items.push(item);
       }
       return items;
     };

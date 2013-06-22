@@ -84,14 +84,17 @@
       if (details.sections != null) {
         var sections = details.sections;
 
-        for (var i = 0, len = sections.length; i < len; i++) {
+        for (var i = 0, len_s = sections.length; i < len_s; i++) {
           var section = sections[i];
-          var fields = section.fields;
-          log('\n=== ' + section.title + ' ===');
+          
+          if ( section.hasOwnProperty('fields') ) {
+            var fields = section.fields;
+            log('\n=== ' + section.title + ' ===');
 
-          for (var j = 0, len = fields.length; j < len; j++) {
-            var field = fields[j];
-            log(field.t + ': ' + field.v);
+            for (var j = 0, len_f = fields.length; j < len_f; j++) {
+              var field = fields[j];
+              log(field.t + ': ' + field.v);
+            }
           }
         }
 
@@ -124,6 +127,7 @@
         }
 
         results = keychain.findItems(query);
+
         if (results.length > 0) {
           item = results[0];
           details = item.unlock('details');
@@ -154,7 +158,7 @@
     openKeychain: function(filepath) {
       // Set keychain
       keychain = new Keychain().load(filepath);
-      keychain.on('lock', function() {
+      keychain.event.on('lock', function() {
         log('\nLocking the Keychain\n');
       });
       fn.unlock(function() {

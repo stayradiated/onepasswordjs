@@ -38,9 +38,11 @@ describe('Keychain', function() {
 
     var keychain;
 
-    it('should open a keychain file', function() {
+    it('should open a keychain file', function(done) {
       keychain = new Keychain();
-      keychain.load('./data/tests.cloudkeychain');
+      keychain.load('./data/tests.cloudkeychain', function() {
+        done();
+      });
     });
 
     it('should unlock the keychain', function() {

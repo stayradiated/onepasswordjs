@@ -233,8 +233,8 @@ class Item
    * > Boolean - Whether or not the item matches the query.
   ###
   match: (query) =>
-    query = query.toLowerCase()
-    @overview.title.toLowerCase().match(query)
+    regex = new RegExp(query, 'i')
+    @overview.title.match(regex)
 
 
 module.exports = Item
