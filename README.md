@@ -385,6 +385,8 @@ Or if you don't want to install mocha globally:
     npm install .
     cake tests
 
+_Also remember to recompile the coffeescript before testing!_
+
 License
 -------
 This work is licensed under the ISC license.

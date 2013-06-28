@@ -132,7 +132,7 @@ describe('Crypto', function() {
     for (val in numbers) {
       endian = numbers[val];
       assert.equal(Crypto.parseLittleEndian(endian), val);
-      assert.equal(Crypto.stringifyLittleEndian(val), endian);
+      assert.equal(Crypto.littleEndian(val), endian);
     }
   });
 
