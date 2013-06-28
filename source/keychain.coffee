@@ -147,13 +147,13 @@ class Keychain
       if profile?
         @loadProfile(profile)
       else
-        throw new Error 'Couldn\'t find profile.js'
+        callback(new Error 'Couldn\'t find profile.js')
 
       if folders? then @loadFolders(folders)
       if bands.length > 0 then @loadBands(bands)
       if attachments.length > 0 then @loadAttachment(attachments)
 
-      if callback? then callback()
+      callback(null)
 
     return this
 
@@ -300,17 +300,17 @@ class Keychain
   ###*
    * Lock the keychain. This discards all currently decrypted keys, overview
    * data and any decrypted item details.
-   * - autolock {Boolean} : Whether the keychain was locked automatically.
+   * - _autolock {Boolean} : Whether the keychain was locked automatically.
    * > this
   ###
-  lock: (autolock) ->
-    @event.emit('lock:before', autolock)
+  lock: (_autolock) ->
+    @event.emit('lock:before', _autolock)
     @super = undefined
     @master = undefined
     @overview = undefined
     @items = {}
     @unlocked = false
-    @event.emit('lock:after', autolock)
+    @event.emit('lock:after', _autolock)
     return this
 
 
