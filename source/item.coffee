@@ -125,11 +125,11 @@ class Item
 
   ###*
    * Decrypt the item data.
-   * - type {string} : The part of the item to unlock. Can be all, keys, 
+   * - [type=all] {string} : The part of the item to unlock. Can be all, keys, 
    *   details or overview.
    * > this, keys, details, or overveiw
   ###
-  unlock: (type) ->
+  unlock: (type='all') ->
 
     switch type
 

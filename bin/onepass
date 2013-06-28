@@ -24,7 +24,7 @@
   var init = function() {
 
     program
-      .version('0.1.1')
+      .version('0.2.2')
       .option('-d, --debug', 'Run in debug mode')
       .option('-v, --verbose', 'Display progress')
       .option('-p, --password', 'The master password');
@@ -79,7 +79,7 @@
       log('Category: ', item.category);
       log(JSON.stringify(item.overview, null, 2));
 
-      return item.calculateHmac(keychain.master.hmac);
+      // return item.calculateHmac(keychain.master.hmac);
 
       if (details.sections != null) {
         var sections = details.sections;
@@ -157,13 +157,17 @@
 
     openKeychain: function(filepath) {
       // Set keychain
-      keychain = new Keychain().load(filepath);
+      keychain = new Keychain().load(filepath, function() {
+        fn.unlock(function() {
+          fn.showItemList();
+          fn.search();
+        });
+      });
+      keychain.event.on('unlock', function() {
+        log('\nKeychain has been unlocked\n');
+      });
       keychain.event.on('lock', function() {
         log('\nLocking the Keychain\n');
-      });
-      fn.unlock(function() {
-        fn.showItemList();
-        fn.search();
       });
     },
 

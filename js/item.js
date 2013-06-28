@@ -150,7 +150,7 @@
 
     /**
      * Decrypt the item data.
-     * - type {string} : The part of the item to unlock. Can be all, keys, 
+     * - [type=all] {string} : The part of the item to unlock. Can be all, keys, 
      *   details or overview.
      * > this, keys, details, or overveiw
     */
@@ -158,6 +158,9 @@
 
     Item.prototype.unlock = function(type) {
       var json, keys;
+      if (type == null) {
+        type = 'all';
+      }
       switch (type) {
         case 'all':
           this.unlock('keys');

@@ -128,6 +128,7 @@
     /*
      * Load data from a .cloudKeychain folder
      * - filepath {string} : The filepath of the .cloudKeychain file
+     * - [callback] {function} : Called when the keychain has loaded
      * ! if profile.js can't be found
      * > this
     */
@@ -136,11 +137,14 @@
     Keychain.prototype.load = function(keychainPath, callback) {
       var _this = this;
       this.keychainPath = keychainPath;
+      if (callback == null) {
+        callback = function() {};
+      }
       this.profileFolder = this.keychainPath + '/' + this.profileName;
       fs.readdir(this.profileFolder, function(err, folderContents) {
         var attachments, bands, filename, folder, folders, profile, _i, _len;
         if (err != null) {
-          throw err;
+          callback(err);
         }
         profile = null;
         folder = null;
@@ -330,7 +334,9 @@
       this["super"] = void 0;
       this.master = void 0;
       this.overview = void 0;
-      this.items = {};
+      this.eachItem(function(item) {
+        return item.lock('all');
+      });
       this.unlocked = false;
       this.event.emit('lock:after', _autolock);
       return this;

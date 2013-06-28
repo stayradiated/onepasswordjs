@@ -118,16 +118,17 @@ class Keychain
   ###
    * Load data from a .cloudKeychain folder
    * - filepath {string} : The filepath of the .cloudKeychain file
+   * - [callback] {function} : Called when the keychain has loaded
    * ! if profile.js can't be found
    * > this
   ###
-  load: (@keychainPath, callback) ->
+  load: (@keychainPath, callback=->) ->
 
     @profileFolder = @keychainPath + '/' + @profileName
 
     fs.readdir @profileFolder, (err, folderContents) =>
 
-      if err? then throw err
+      if err? then callback(err)
 
       profile = null
       folder = null
@@ -308,7 +309,7 @@ class Keychain
     @super = undefined
     @master = undefined
     @overview = undefined
-    @items = {}
+    @eachItem (item) -> item.lock('all')
     @unlocked = false
     @event.emit('lock:after', _autolock)
     return this
