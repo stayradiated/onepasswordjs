@@ -87,7 +87,7 @@ values. However extra settings cannot be added. The default settings are:
       profileName: 'default',
       passwordHint: '',
       lastUpdatedBy: 'Dropbox'
-    }
+    };
 
 This logs the following (indented and trimmed for readibility):
 
@@ -109,42 +109,55 @@ This logs the following (indented and trimmed for readibility):
 
 ## Events
 
-Used to listen for events in the keychain. Their is currently only one event that is triggered at the moment
+Events are implemented using the NodeJS EventEmitter. The API is available on
+the [NodeJS.org website](http://nodejs.org/api/events.html).
 
-  - 'lock'
+To use the EventEmitter:
 
-### on(event, [id], fn)
-
-Listens for the event `event` and when triggered fires `fn`.
-If no `id` is specified, an id is generated automatically.
-Returns the `id`.
-
-    keychain.on('lock', function(autolock) {
-      console.log( 'The keychain has been locked' );
+    keychain = new Keychain();
+    keychain.event.on('event', function(args) {
+        console.log('Event fired!', args);
     });
+    keychain.event.emit('event', 'random data');
 
-### off(event, [id])
 
-If an `id` is specified, it will remove that event listener.
-If no `id` is specifed, then it will remove all event listeners for that `event`.
+### Event: 'unlock'
 
-    keychain.off( 'lock' );
+    function() { }
 
-### one(event, [id], fn)
+When the keychain is unlocked.
 
-The same as `on` but will only run once.
+
+### Event: 'lock:before'
+
+    function (autolock) { }
+
+When the keychain is locked. If the keychain was locked automatically by a
+timer, then `autolock` will be true. Used to run code before the keychain is
+locked.
+
+### Event: 'lock:after'
+    
+    function (autolock) { }
+
+When the keychain is locked. If the keychain was locked automatically by the
+timer, then `autolock` will be true. Used to run code after the keychain has
+been locked.
 
 
 ## Loading data from files
 
 Load keychain data from a file on disk.
 
-### load(filepath)
+### load(filepath, callback)
 
 This is the main loading function and probably the only one you'll only ever need to use.
 `filepath` points to a `.cloudkeychain` folder and it will go through and load all files it finds using the other functions.
 
-    keychain.load( './1password.cloudkeychain' );
+    keychain.load( './1password.cloudkeychain', function(err) {
+        if ( err ) return console.log( err.message );
+        console.log( 'Successfully loaded keychain' );
+    });
 
 ### loadProfile(filepath, rawData)
 
@@ -155,10 +168,12 @@ If you already have profile.js then set `rawData` to `true`.
     keychain.loadProfile( filename );
 
     // Alternative
-    profileData = readFile( filename )
+    profileData = readFileContents( filename )
     keychain.loadProfile( profileData, true )
 
 ### loadFolders(filepath)
+
+__Warning: Not yet implemented.__
 
 Load the `folders.js` file data into the keychain.
 
@@ -175,6 +190,8 @@ Load the `folders.js` file data into the keychain.
     ]);
 
 ### loadAttachment(attachments)
+
+__Warning: Not yet implemented__
 
 `attachments` is an array of filepaths pointing to each band file.
 
@@ -209,6 +226,17 @@ This will reschedule the autolock time.
 It should only be called when the user does something importantt in the app.
 
     keychain.rescheduleAutoLock()
+
+
+### changePassword(currentPassword, newPassword)
+
+__Warning: Not yet tested__
+
+This function will regenerate the master and overview keys using `newPassword`.
+The `currentPassword` is required, as it is not stored in memory for security
+reasons.
+
+    keychain.changePassword( 'fred', 'phil' );
 
 
 ## Items
