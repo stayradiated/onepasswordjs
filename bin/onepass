@@ -42,9 +42,7 @@
     program
       .command('migrate [in] [out]')
       .description('Change the password for a keychain')
-      .action(function(input, output) {
-        log(input, output);
-      });
+      .action(fn.migrateKeychain);
 
     program.parse(process.argv);
 
@@ -80,6 +78,8 @@
 
       log('Category: ', item.category);
       log(JSON.stringify(item.overview, null, 2));
+
+      return item.calculateHmac(keychain.master.hmac);
 
       if (details.sections != null) {
         var sections = details.sections;
@@ -165,6 +165,15 @@
         fn.showItemList();
         fn.search();
       });
+    },
+
+    migrateKeychain: function(inputFilepath, outputFilepath) {
+
+      console.log({
+        input: inputFilepath,
+        output: outputFilepath
+      });
+
     }
 
   };

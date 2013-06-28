@@ -134,9 +134,8 @@ Crypto =
    * > float - between 0 and 1
   ###
   randomValue: ->
-    bytes = @randomBytes(4)
-    hex = bytes.toString('hex')
-    decimal = parseInt(hex, 16)
+    bytes = @randomBytes(4).toString('hex')
+    decimal = parseInt(bytes, 16)
     return decimal * Math.pow(2, -32)
 
 
@@ -158,9 +157,7 @@ Crypto =
   ###
   toHex: (data) ->
     if data instanceof Buffer then return data.toString('hex')
-    if typeof data is 'string' then return data
-    throw new Error 'Input is not the correct type'
-
+    return data
 
   ###*
    * Convert base64 to Buffer.
@@ -183,10 +180,11 @@ Crypto =
   ###*
    * Parse a litte endian number. Original JS version by Jim Rogers.
    * http://www.jimandkatrin.com/CodeBlog/post/Parse-a-little-endian.aspx
-   * - hex {String} : The little endian number.
-   * > {Number} - the little endian converted to a number.
+   * - hex {buffer or string} : The little endian number.
+   * > number - the little endian converted to a number.
   ###
   parseLittleEndian: (hex) ->
+    hex = @toHex(hex)
     result = 0
     pow = 0
     i = 0
@@ -201,9 +199,9 @@ Crypto =
    * Convert an integer into a little endian.
    * - number {Number} number The integer you want to convert.
    * - [pad=true] {Boolean} : Pad the little endian with zeroes.
-   * > string
+   * > string - encoded as hex
   ###
-  stringifyLittleEndian: (number, pad=true) ->
+  littleEndian: (number, pad=true) ->
     power = Math.floor((Math.log(number) / Math.LN2) / 8) * 8
     multiplier = Math.pow(2, power)
     value = Math.floor(number / multiplier)
@@ -227,7 +225,7 @@ Crypto =
   ###
   dec2hex: (dec) ->
     hex = dec.toString(16)
-    if hex.length < 2 then hex = "0" + hex
+    if hex.length < 2 then hex = '0' + hex
     return hex
 
 
@@ -239,7 +237,7 @@ Crypto =
   bin2hex: (binary) ->
     hex = ""
     for char in binary
-      hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, "0$1")
+      hex += char.charCodeAt(0).toString(16).replace(/^([\dA-F])$/i, '0$1')
     return hex
 
 
@@ -250,7 +248,7 @@ Crypto =
   ###
   generateUuid: (length=32) ->
     length /= 2 # one byte is equal to two hex values
-    return @randomBytes(length).toString('hex').toUpperCase(0)
+    return @randomBytes(length).toString('hex').toUpperCase()
 
 
 module.exports = Crypto

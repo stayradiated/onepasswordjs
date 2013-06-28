@@ -75,6 +75,7 @@
 
       this.keychain = keychain;
       this.match = __bind(this.match, this);
+      this.toJSON = __bind(this.toJSON, this);
       this.keysUnlocked = false;
       this.detailsUnlocked = false;
       this.overviewUnlocked = false;
@@ -236,6 +237,7 @@
       var data, dataToHmac, element, hmac, _ref;
 
       dataToHmac = "";
+      console.log(this.toJSON());
       _ref = this.toJSON();
       for (element in _ref) {
         data = _ref[element];
@@ -244,7 +246,7 @@
         }
         dataToHmac += element + data;
       }
-      dataToHmac = new Buffer(dataToHmac, 'utf8');
+      dataToHmac = new Buffer(dataToHmac);
       hmac = Crypto.hmac(dataToHmac, key, 256, 'hex');
       console.log(hmac);
       return console.log(this.hmac.toString('hex'));
@@ -257,15 +259,15 @@
 
 
     Item.prototype.toJSON = function() {
-      var _ref, _ref1, _ref2, _ref3;
+      var _ref;
 
       return {
         category: this.category,
         created: this.created,
-        d: (_ref = this.d) != null ? _ref.toString('base64') : void 0,
-        hmac: (_ref1 = this.hmac) != null ? _ref1.toString('base64') : void 0,
-        k: (_ref2 = this.keys) != null ? _ref2.toString('base64') : void 0,
-        o: (_ref3 = this.o) != null ? _ref3.toString('base64') : void 0,
+        d: this.encrypted.details.toString('base64'),
+        hmac: (_ref = this.hmac) != null ? _ref.toString('base64') : void 0,
+        k: this.encrypted.keys.toString('base64'),
+        o: this.encrypted.overview.toString('base64'),
         tx: this.tx,
         updated: this.updated,
         uuid: this.uuid
