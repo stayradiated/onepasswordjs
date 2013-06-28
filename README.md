@@ -368,13 +368,13 @@ Check if an item matches a query. Useful for searching through a keychain. It ch
 
 ## Compiling
 
-To compile the coffeescript into javascript use grunt:
+To compile the coffeescript into javascript use `cake`:
 
-    grunt --compile
+    cake build
 
 ## Tests
 
-Tests are written using [Mocha](http://visionmedia.github.com/mocha/).
+Tests are written in JavaScript using [Mocha](http://visionmedia.github.com/mocha/).
 To run the tests
 
     mocha tests
