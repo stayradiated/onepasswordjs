@@ -1,4 +1,2 @@
 /data
-/categories.mdown
-*.sublime-*
-/command.coffee
+/categories.md

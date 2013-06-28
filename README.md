@@ -1,4 +1,4 @@
-# Cloud Keychain for Node.js (v0.1.1)
+# Cloud Keychain for Node.js (v0.2.1)
 
 This is a small library to make it easy to work with
   [1Password's](http://agilebits.com/onepassword) .cloudKeychain files.
@@ -27,22 +27,6 @@ JSON)
 
 ## Installation
 
-Add `1password` to your `package.json` file.
-
-    {
-      "name": "yourapplication",
-      "version": "0.1.0",
-      "dependencies": {
-        "1password": "0.1.0"
-      }
-    }
-
-Then run the following command
-
-    npm install
-
-OR, if you just want to start playing with the library:
-
     npm install 1password
 
 
@@ -50,38 +34,62 @@ OR, if you just want to start playing with the library:
 
 __Step 1: Open the keychain__
 
-    Keychain = require('1password');
+    Keychain = require( '1password' );
     keychain = new Keychain();
-    keychain.load('./1password.cloudkeychain');
+    keychain.load( './1password.cloudkeychain', function( err ) {
+        console.log( 'Keychain has loaded' ); 
+    });
 
 __Step 2: Unlocking the keychain__
 
-    keychain.unlock('password');
+    keychain.unlock( 'password' );
+
+    if ( keychain.unlocked ) {
+        console.log( 'Successfully unlocked keychain' );
+    } else {
+        console.log( 'Error: Could not unlock keychain' );
+    }
 
 __Step 3: Get items__
 
-    keychain.eachItem(function(item) {
-      console.log( item.overview.title );
+    keychain.eachItem( function( item ) {
+      console.log( item );
     });
 
 __Step 4: Decrypt item details__
 
     item = keychain.findItems( 'Facebook' )[0];
-    item.unlockDetails()
-    console.log( itemdetails );
+    item.unlockDetails();
+    console.log( item.details );
 
 
 # Main Keychain Methods
 
-## Keychain.create(password, hint)
+## Keychain.create(password, settings)
 
 Returns an empty keychain encrypted using the password specified.
 
-    keychain = Keychain.create( 'password', 'hint' );
+    keychain = Keychain.create( 'password', {
+        passwordHint: 'hint'
+    });
     profile = keychain.exportProfile();
     console.log( profile );
 
-This logs the following (indented for readibility):
+The `settings` parameter is an object and can overwrite any of the default
+values. However extra settings cannot be added. The default settings are:
+    
+    settings = {
+      uuid: Crypto.generateUuid(),
+      salt: Crypto.randomBytes(16),
+      createdAt: currentTime,
+      updatedAt: currentTime,
+      iterations: 10000,
+      profileName: 'default',
+      passwordHint: '',
+      lastUpdatedBy: 'Dropbox'
+    };
+
+This logs the following (indented and trimmed for readibility):
 
     var profile={
       "lastUpdatedBy": "Dropbox",
@@ -101,42 +109,55 @@ This logs the following (indented for readibility):
 
 ## Events
 
-Used to listen for events in the keychain. Their is currently only one event that is triggered at the moment
+Events are implemented using the NodeJS EventEmitter. The API is available on
+the [NodeJS.org website](http://nodejs.org/api/events.html).
 
-  - 'lock'
+To use the EventEmitter:
 
-### on(event, [id], fn)
-
-Listens for the event `event` and when triggered fires `fn`.
-If no `id` is specified, an id is generated automatically.
-Returns the `id`.
-
-    keychain.on('lock', function(autolock) {
-      console.log( 'The keychain has been locked' );
+    keychain = new Keychain();
+    keychain.event.on('event', function(args) {
+        console.log('Event fired!', args);
     });
+    keychain.event.emit('event', 'random data');
 
-### off(event, [id])
 
-If an `id` is specified, it will remove that event listener.
-If no `id` is specifed, then it will remove all event listeners for that `event`.
+### Event: 'unlock'
 
-    keychain.off( 'lock' );
+    function() { }
 
-### one(event, [id], fn)
+When the keychain is unlocked.
 
-The same as `on` but will only run once.
+
+### Event: 'lock:before'
+
+    function (autolock) { }
+
+When the keychain is locked. If the keychain was locked automatically by a
+timer, then `autolock` will be true. Used to run code before the keychain is
+locked.
+
+### Event: 'lock:after'
+    
+    function (autolock) { }
+
+When the keychain is locked. If the keychain was locked automatically by the
+timer, then `autolock` will be true. Used to run code after the keychain has
+been locked.
 
 
 ## Loading data from files
 
 Load keychain data from a file on disk.
 
-### load(filepath)
+### load(filepath, callback)
 
 This is the main loading function and probably the only one you'll only ever need to use.
 `filepath` points to a `.cloudkeychain` folder and it will go through and load all files it finds using the other functions.
 
-    keychain.load( './1password.cloudkeychain' );
+    keychain.load( './1password.cloudkeychain', function(err) {
+        if ( err ) return console.log( err.message );
+        console.log( 'Successfully loaded keychain' );
+    });
 
 ### loadProfile(filepath, rawData)
 
@@ -147,10 +168,12 @@ If you already have profile.js then set `rawData` to `true`.
     keychain.loadProfile( filename );
 
     // Alternative
-    profileData = readFile( filename )
+    profileData = readFileContents( filename )
     keychain.loadProfile( profileData, true )
 
 ### loadFolders(filepath)
+
+__Warning: Not yet implemented.__
 
 Load the `folders.js` file data into the keychain.
 
@@ -167,6 +190,8 @@ Load the `folders.js` file data into the keychain.
     ]);
 
 ### loadAttachment(attachments)
+
+__Warning: Not yet implemented__
 
 `attachments` is an array of filepaths pointing to each band file.
 
@@ -201,6 +226,17 @@ This will reschedule the autolock time.
 It should only be called when the user does something importantt in the app.
 
     keychain.rescheduleAutoLock()
+
+
+### changePassword(currentPassword, newPassword)
+
+__Warning: Not yet tested__
+
+This function will regenerate the master and overview keys using `newPassword`.
+The `currentPassword` is required, as it is not stored in memory for security
+reasons.
+
+    keychain.changePassword( 'fred', 'phil' );
 
 
 ## Items
@@ -332,16 +368,24 @@ Check if an item matches a query. Useful for searching through a keychain. It ch
 
 ## Compiling
 
-To compile the coffeescript into javascript use grunt:
+To compile the coffeescript into javascript use `cake`:
 
-    grunt --compile
+    cake build
 
 ## Tests
 
-Tests are written using [Mocha](http://visionmedia.github.com/mocha/).
+Tests are written in JavaScript using [Mocha](http://visionmedia.github.com/mocha/).
 To run the tests
 
+    sudo npm install -g mocha
     mocha tests
+
+Or if you don't want to install mocha globally:
+
+    npm install .
+    cake tests
+
+_Also remember to recompile the coffeescript before testing!_
 
 License
 -------
