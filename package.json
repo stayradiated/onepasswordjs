@@ -1,7 +1,7 @@
 {
   "name": "1password",
   "description": "Work With 1Password Keychains",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "George Czabania <george@czabania.com>",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
     "onepass": "./bin/onepass"
   },
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script tests"
+    "test": "mocha tests"
   },
   "engines": {
     "node": ">= 0.8.0"
