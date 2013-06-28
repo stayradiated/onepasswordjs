@@ -10,9 +10,9 @@ class Item
 
   ###*
    * Create a new Item.
-   * @param {Kecyhain} keychain The keychain to encrypt the item with.
-   * @param {Object} data The data to add to the Item.
-   * @return {Item} The item.
+   * - keychain {kecyhain} : The keychain to encrypt the item with.
+   * - data {object} : The data to add to the Item.
+   * > item - the item.
   ###
   @create: (keychain, data) =>
 
@@ -58,8 +58,7 @@ class Item
 
   ###*
    * Create a new Item instance.
-   * @constructor
-   * @param {Object} [attrs] Any attributes to load into the item
+   * - [attrs] {object} : Any attributes to load into the item
   ###
   constructor: (@keychain, attrs) ->
     @keysUnlocked = false
@@ -73,17 +72,20 @@ class Item
 
   ###*
    * Load attributes from the exported format
-   * @param {Object} data Data to load
-   * @return {this}
+   * - data {object} : Data to load
+   * > this
   ###
   load: (data) ->
-    for key in ['category', 'created', 'fave', 'folder', 'tx', 'trashed', 'updated', 'uuid']
-      if data[key]? then @[key] = data[key]
+
+    # Only load valid attributes
+    for key in ['category', 'created', 'fave', 'folder', 'tx', 'trashed',
+                'updated', 'uuid']
+      if data.hasOwnProperty(key) then @[key] = data[key]
 
     # Convert to base64
     for key in ['d', 'hmac', 'k', 'o']
-      continue unless data[key]?
-      data[key] = Crypto.fromBase64(data[key])
+      continue unless data.hasOwnProperty(key)
+      data[key] = Crypto.fromBase64 data[key]
 
     @hmac = data.hmac
     @encrypted.keys = data.k
@@ -94,38 +96,43 @@ class Item
 
 
   ###*
-   * Lock the item.
-   * Deletes the unencrypted data.
+   * Lock the item. Deletes the unencrypted data.
+   * - type {string} : what to lock - all, keys, details or overview
+   * > this
   ###
   lock: (type) ->
+
     switch type
+
       when 'all'
-        @lock('keys')
-        @lock('details')
-        @lock('overview')
-        return this
+        @lock 'keys'
+        @lock 'details'
+        @lock 'overview'
 
       when 'keys'
         delete @keys
         keysUnlocked = false
-        return this
 
       when 'details'
         delete @details
         detailsUnlocked = false
-        return this
 
       when 'overview'
         delete @overview
         overviewUnlocked = false
-        return this
+
+    return this
 
   ###*
    * Decrypt the item data.
-   * @param  {string} type The part of the item to unlock. Can be `all`, `keys`, `details` or `overview`.
+   * - type {string} : The part of the item to unlock. Can be all, keys, 
+   *   details or overview.
+   * > this, keys, details, or overveiw
   ###
   unlock: (type) ->
+
     switch type
+
       when 'all'
         @unlock('keys')
         @unlock('details')
@@ -133,20 +140,23 @@ class Item
         return this
 
       when 'keys'
-        keys = @keychain.master.decrypt('itemKey', @encrypted.keys)
-        @keys = new Opdata(keys[0], keys[1])
+        keys = @keychain.master.decrypt( 'itemKey', @encrypted.keys )
+        @keys = new Opdata(
+          new Buffer(keys[0], 'hex') # item encryption key
+          new Buffer(keys[1], 'hex') # item hmac key
+        )
         @keysUnlocked = true
         return @keys
 
       when 'details'
         @unlock('keys') unless @keysUnlocked
-        json = @keys.decrypt('item', @encrypted.details)
+        json = @keys.decrypt( 'item', @encrypted.details )
         @details = JSON.parse(json)
         @detailsUnlocked = true
         return @details
 
       when 'overview'
-        json = @keychain.overview.decrypt('item', @encrypted.overview)
+        json = @keychain.overview.decrypt( 'item', @encrypted.overview )
         @overview = JSON.parse(json)
         @overviewUnlocked = true
         return @overview
@@ -154,49 +164,52 @@ class Item
 
   ###*
    * Encrypt the item data.
-   * @param  {string} type The part of the item to encrypt. Can be `all`, `keys`, `details` or `overview`.
+   * - type {string} : The part of the item to encrypt. Can be all, keys,
+   *   details or overview.
+   * > this
   ###
   encrypt: (type) ->
+
     switch type
+
       when 'all'
         @encrypt('keys')
         @encrypt('details')
         @encrypt('overview')
-        return this
 
       when 'keys'
-        joined = Buffer.concat([@keys.encryption, @keys.hmac])
-        @encrypted.keys = @keychain.master.encrypt('itemKey', joined)
-        return this
+        joined = Buffer.concat [ @keys.encryption, @keys.hmac ]
+        @encrypted.keys = @keychain.master.encrypt( 'itemKey', joined )
 
       when 'details'
         @unlock('keys') unless @keysUnlocked
-        json = JSON.stringify(@details)
-        buffer = Crypto.toBuffer(json, 'utf8')
-        @encrypted.details = @keys.encrypt('item', buffer)
-        return this
+        buffer = new Buffer JSON.stringify @details
+        @encrypted.details = @keys.encrypt( 'item', buffer )
 
       when 'overview'
-        json = JSON.stringify(@overview)
-        buffer = Crypto.toBuffer(json, 'utf8')
-        @encrypted.overview = @keychain.overview.encrypt('item', buffer)
-        return this
+        buffer = new Buffer JSON.stringify @overview
+        @encrypted.overview = @keychain.overview.encrypt( 'item', buffer )
 
+    return this
 
   ###*
    * Calculate the hmac of the item
    * TODO: Find out why it doesn't work...
-   * @param {Buffer} key The master hmac key
-   * @return {String} The hmac of the item encoded in hex
+   * - key {Buffer} : The master hmac key
+   * > string - The hmac of the item encoded in hex
   ###
   calculateHmac: (key) ->
+
     dataToHmac = ""
+
+    console.log @toJSON()
+
     for element, data of @toJSON()
       continue if element is "hmac"
       dataToHmac += element + data
-
-    dataToHmac = new Buffer(dataToHmac, 'utf8')
-    hmac = Crypto.hmac(dataToHmac, key, 256)
+    
+    dataToHmac = new Buffer(dataToHmac)
+    hmac = Crypto.hmac(dataToHmac, key, 256, 'hex')
 
     console.log hmac
     console.log @hmac.toString('hex')
@@ -204,16 +217,16 @@ class Item
 
   ###*
    * Turn an item into a JSON object.
-   * @return {Object} The JSON object.
+   * > Object - the JSON object.
   ###
-  toJSON: ->
+  toJSON: =>
     category: @category
     created: @created
-    d: @d?.toString('base64')
+    d: @encrypted.details.toString('base64')
     # folder: ""
     hmac: @hmac?.toString('base64')
-    k: @keys?.toString('base64')
-    o: @o?.toString('base64')
+    k: @encrypted.keys.toString('base64')
+    o: @encrypted.overview.toString('base64')
     tx: @tx
     updated: @updated
     uuid: @uuid
@@ -221,12 +234,12 @@ class Item
 
   ###*
    * Check to see if an item matches a query. Used for filtering items.
-   * @param {String} query The search query.
-   * @return {Boolean} Whether or not the item matches the query.
+   * - query {string} : The search query.
+   * > Boolean - Whether or not the item matches the query.
   ###
   match: (query) =>
-    query = query.toLowerCase()
-    @overview.title.toLowerCase().match(query)
+    regex = new RegExp(query, 'i')
+    @overview.title.match(regex)
 
 
 module.exports = Item
