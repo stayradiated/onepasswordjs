@@ -206,11 +206,12 @@ class Keychain
    * > this
   ###
   loadBands: (bands) ->
+
     for filepath in bands
 
       # Load file
       band = fs.readFileSync(filepath).toString('utf8')
-      band = band[BAND_PREFIX.length...-BAND_SUFFIX.length]
+      band = band[ BAND_PREFIX.length ... -BAND_SUFFIX.length ]
       band = JSON.parse(band)
 
       # Add items

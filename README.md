@@ -27,22 +27,6 @@ JSON)
 
 ## Installation
 
-Add `1password` to your `package.json` file.
-
-    {
-      "name": "yourapplication",
-      "version": "0.1.0",
-      "dependencies": {
-        "1password": "0.1.0"
-      }
-    }
-
-Then run the following command
-
-    npm install
-
-OR, if you just want to start playing with the library:
-
     npm install 1password
 
 
@@ -50,38 +34,48 @@ OR, if you just want to start playing with the library:
 
 __Step 1: Open the keychain__
 
-    Keychain = require('1password');
+    Keychain = require( '1password' );
     keychain = new Keychain();
-    keychain.load('./1password.cloudkeychain');
+    keychain.load( './1password.cloudkeychain', function( err ) {
+        console.log( 'Keychain has loaded' ); 
+    });
 
 __Step 2: Unlocking the keychain__
 
-    keychain.unlock('password');
+    keychain.unlock( 'password' );
+
+    if ( keychain.unlocked ) {
+        console.log( 'Successfully unlocked keychain' );
+    } else {
+        console.log( 'Error: Could not unlock keychain' );
+    }
 
 __Step 3: Get items__
 
-    keychain.eachItem(function(item) {
-      console.log( item.overview.title );
+    keychain.eachItem( function( item ) {
+      console.log( item );
     });
 
 __Step 4: Decrypt item details__
 
     item = keychain.findItems( 'Facebook' )[0];
-    item.unlockDetails()
-    console.log( itemdetails );
+    item.unlockDetails();
+    console.log( item.details );
 
 
 # Main Keychain Methods
 
-## Keychain.create(password, hint)
+## Keychain.create(password, settings)
 
 Returns an empty keychain encrypted using the password specified.
 
-    keychain = Keychain.create( 'password', 'hint' );
+    keychain = Keychain.create( 'password', {
+        passwordHint: 'hint'
+    });
     profile = keychain.exportProfile();
     console.log( profile );
 
-This logs the following (indented for readibility):
+This logs the following (indented and trimmed for readibility):
 
     var profile={
       "lastUpdatedBy": "Dropbox",

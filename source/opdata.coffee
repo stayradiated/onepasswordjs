@@ -5,7 +5,8 @@
 Crypto = require('./crypto')
 
 # Constants
-OPDATA_HEADER = '6F70646174613031'
+OPDATA_HEADER = new Buffer('6F70646174613031', 'hex')
+OPDATA_HEADER_HEX = OPDATA_HEADER.toString('hex')
 
 class Opdata
 
@@ -28,36 +29,32 @@ class Opdata
   ###
    * Decrypt an object
    * - type {string} : Can be either buffer, item, itemKey or profileKey
-   * - object {string or buffer} : The encrypted opdata object
+   * - object {buffer} : The encrypted opdata object
    * > string or buffer - The decrypted object
   ###
 
-  decrypt: (type, object) ->
+  decrypt: (type, buffer) ->
 
-    if object not instanceof Buffer
-      console.log object
-
-    object = Crypto.toHex(object)
-
-    if type isnt 'itemKey' and object[0..15].toUpperCase() isnt OPDATA_HEADER
+    if type isnt 'itemKey' and
+    buffer[0..7].toString('hex') isnt OPDATA_HEADER_HEX
       console.error 'Not an opdata01 object'
       return false
 
     if type is 'itemKey'
-      iv         = Crypto.toBuffer(object[0...32])
-      ciphertext = Crypto.toBuffer(object[32...-64])
+      iv         = buffer[0..15]
+      ciphertext = buffer[16..-33]
 
     else
-      length     = Crypto.parseLittleEndian(object[16...32])
-      iv         = Crypto.toBuffer(object[32...64])
-      ciphertext = Crypto.toBuffer(object[64...-64])
+      length     = Crypto.parseLittleEndian buffer[8..15]
+      iv         = buffer[16..31]
+      ciphertext = buffer[32..-33]
 
-    dataToHmac   = Crypto.toBuffer(object[0...-64])
-    expectedHmac = object[-64..]
+    dataToHmac   = buffer[0..-33]
+    expectedHmac = buffer[-32..].toString('hex')
 
     # Verify HMAC
-    objectHmac = Crypto.hmac(dataToHmac, @hmac, 256, 'hex')
-    if objectHmac isnt expectedHmac
+    hmac = Crypto.hmac(dataToHmac, @hmac, 256, 'hex')
+    if hmac isnt expectedHmac
       # Hmac does not match, key and/or data is invalid
       return false
 
@@ -67,7 +64,8 @@ class Opdata
     # ItemKeys are not padded
     if type isnt 'itemKey'
       plaintext = Crypto.unpad(length, rawBuffer)
-
+    
+    # Depending on the type of data we are decrypting, 
     switch type
 
       when 'buffer'
@@ -77,11 +75,12 @@ class Opdata
         return plaintext.toString('utf8')
 
       when 'itemKey'
-        return [rawBuffer[0..31], rawBuffer[32..]]
+        return [ rawBuffer[0..31], rawBuffer[32..] ]
 
       when 'profileKey'
+        # Profile keys are hashed with SHA512
         keys = Crypto.hash(plaintext, 512)
-        return [keys[0..31],keys[32..]]
+        return [ keys[0..31], keys[32..] ]
 
 
   ###
@@ -100,23 +99,22 @@ class Opdata
     if type is 'itemKey'
       paddedtext = plaintext
     else
-      paddedtext = Crypto.concat([iv, Crypto.pad(plaintext)])
+      paddedtext = Crypto.concat [ iv, Crypto.pad(plaintext) ]
 
-    # Encrypt using AES 256 in cbc mode
-    ciphertext = Crypto.encrypt(paddedtext, @encryption, iv)
+    # Encrypt using AES 256 in CBC mode
+    ciphertext = Crypto.encrypt( paddedtext, @encryption, iv )
 
     # Header data
     if type is 'itemKey'
-      dataToHmac = Crypto.concat([iv, ciphertext])
+      dataToHmac = Crypto.concat [ iv, ciphertext ]
     else
-      header = Crypto.toBuffer(OPDATA_HEADER)
-      endian = Crypto.stringifyLittleEndian(plaintext.length)
-      endian = Crypto.toBuffer(endian)
-      dataToHmac = Crypto.concat([header, endian, iv, ciphertext])
+      header = OPDATA_HEADER
+      endian = Crypto.toBuffer Crypto.littleEndian( plaintext.length )
+      dataToHmac = Crypto.concat [ header, endian, iv, ciphertext ]
 
     # Generate a HMAC using SHA256
-    hmac = Crypto.hmac(dataToHmac, @hmac, 256)
+    hmac = Crypto.hmac( dataToHmac, @hmac, 256 )
 
-    return Crypto.concat([dataToHmac, hmac])
+    return Crypto.concat [ dataToHmac, hmac ]
 
 module.exports = Opdata

@@ -213,13 +213,14 @@
     /**
      * Parse a litte endian number. Original JS version by Jim Rogers.
      * http://www.jimandkatrin.com/CodeBlog/post/Parse-a-little-endian.aspx
-     * - hex {String} : The little endian number.
-     * > {Number} - the little endian converted to a number.
+     * - hex {buffer or string} : The little endian number.
+     * > number - the little endian converted to a number.
     */
 
     parseLittleEndian: function(hex) {
       var i, len, pow, result;
 
+      hex = this.toHex(hex);
       result = 0;
       pow = 0;
       i = 0;

@@ -27,34 +27,30 @@
     /*
      * Decrypt an object
      * - type {string} : Can be either buffer, item, itemKey or profileKey
-     * - object {string or buffer} : The encrypted opdata object
+     * - object {buffer} : The encrypted opdata object
      * > string or buffer - The decrypted object
     */
 
 
-    Opdata.prototype.decrypt = function(type, object) {
-      var ciphertext, dataToHmac, expectedHmac, iv, keys, length, objectHmac, plaintext, rawBuffer;
+    Opdata.prototype.decrypt = function(type, buffer) {
+      var ciphertext, dataToHmac, expectedHmac, hmac, iv, keys, length, plaintext, rawBuffer;
 
-      if (!(object instanceof Buffer)) {
-        console.log(object);
-      }
-      object = Crypto.toHex(object);
-      if (type !== 'itemKey' && object.slice(0, 16).toUpperCase() !== OPDATA_HEADER) {
+      if (type !== 'itemKey' && buffer.slice(0, 8).toString('hex').toUpperCase() !== OPDATA_HEADER) {
         console.error('Not an opdata01 object');
         return false;
       }
       if (type === 'itemKey') {
-        iv = Crypto.toBuffer(object.slice(0, 32));
-        ciphertext = Crypto.toBuffer(object.slice(32, -64));
+        iv = buffer.slice(0, 16);
+        ciphertext = buffer.slice(16, -32);
       } else {
-        length = Crypto.parseLittleEndian(object.slice(16, 32));
-        iv = Crypto.toBuffer(object.slice(32, 64));
-        ciphertext = Crypto.toBuffer(object.slice(64, -64));
+        length = Crypto.parseLittleEndian(buffer.slice(8, 16));
+        iv = buffer.slice(16, 32);
+        ciphertext = buffer.slice(32, -32);
       }
-      dataToHmac = Crypto.toBuffer(object.slice(0, -64));
-      expectedHmac = object.slice(-64);
-      objectHmac = Crypto.hmac(dataToHmac, this.hmac, 256, 'hex');
-      if (objectHmac !== expectedHmac) {
+      dataToHmac = buffer.slice(0, -32);
+      expectedHmac = buffer.slice(-32).toString('hex');
+      hmac = Crypto.hmac(dataToHmac, this.hmac, 256, 'hex');
+      if (hmac !== expectedHmac) {
         return false;
       }
       rawBuffer = Crypto.decrypt(ciphertext, this.encryption, iv);
