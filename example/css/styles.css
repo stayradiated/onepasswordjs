@@ -1,0 +1,118 @@
+body {
+  font-family: "Open Sans";
+  background: #333333;
+}
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 600px;
+  margin-top: -300px;
+  margin-left: -400px;
+  background: white;
+}
+
+.locked {
+  display: none;
+}
+.locked p {
+  color: white;
+  text-align: center;
+  font-style: italic;
+  line-height: 400px;
+}
+.locked input {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 50px;
+  margin-top: -25px;
+  margin-left: -150px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 5px;
+  background: white;
+  border: 3px solid #444444;
+  line-height: 30px;
+  font-size: 30px;
+  outline: 0;
+}
+
+header {
+  background: #666666;
+  height: 50px;
+}
+header input {
+  border: 1px solid black;
+  outline: none;
+  width: 200px;
+  height: 30px;
+  margin: 10px;
+  float: right;
+}
+
+.keychain-locked {
+  background: #333333;
+}
+.keychain-locked .locked {
+  display: block;
+}
+.keychain-locked .unlocked {
+  display: none;
+}
+
+.items {
+  margin: 10px;
+  width: 250px;
+  border: 1px solid #cccccc;
+  height: 500px;
+  overflow-y: auto;
+  padding: 10px;
+  float: left;
+}
+.items li {
+  cursor: pointer;
+  list-style-type: none;
+  width: 100%;
+  margin-bottom: 5px;
+}
+.items li:hover {
+  background: #eeeeee;
+}
+
+.item-info {
+  float: left;
+  margin: 10px;
+  padding: 10px;
+  width: 446px;
+  border: 1px solid #cccccc;
+  height: 500px;
+  overflow-y: auto;
+}
+.item-info ul {
+  margin: 0;
+  padding: 0;
+}
+.item-info li {
+  list-style-type: none;
+  background: #eeeeee;
+}
+.item-info .title {
+  font-weight: bold;
+  width: 200px;
+  text-align: right;
+  display: inline-block;
+  vertical-align: top;
+  line-height: 30px;
+  margin-right: 10px;
+}
+.item-info .value {
+  width: 200px;
+  display: inline-block;
+  vertical-align: top;
+  line-height: 30px;
+}

@@ -1,0 +1,110 @@
+@import "compass/css3"
+
+@mixin center( $width, $height )
+  position: absolute
+  top: 50%
+  left: 50%
+  width: $width
+  height: $height
+  margin-top: - $height / 2
+  margin-left: - $width / 2
+
+body
+  font-family: 'Open Sans'
+  background: #333
+
+.container
+  +center(800px, 600px)
+  background: #fff
+
+.locked
+  display: none
+
+  p
+    color: #fff
+    text-align: center
+    font-style: italic
+    line-height: 400px
+
+  input
+    +center(300px, 50px)
+    +box-sizing(border-box)
+    padding: 5px
+    background: #fff
+    border: 3px solid #444
+    line-height: 30px
+    font-size: 30px
+    outline: 0
+
+header
+  background: #666
+  height: 50px
+
+  input
+    border: 1px solid #000
+    outline: none
+    width: 200px
+    height: 30px
+    margin: 10px 
+    float: right
+  
+.unlocked
+
+.keychain-locked
+  background: #333
+  .locked
+    display: block
+  .unlocked
+    display: none
+
+.items
+  margin: 10px
+  width: 250px
+  border: 1px solid #ccc
+  height: 500px
+  overflow-y: auto
+  padding: 10px
+  float: left
+
+  li
+    cursor: pointer
+    list-style-type: none
+    width: 100%
+    margin-bottom: 5px
+
+  li:hover
+    background: #eee
+
+.item-info
+  float: left
+  margin: 10px
+  padding: 10px
+  width: 446px
+  border: 1px solid #ccc
+  height: 500px
+  overflow-y: auto
+
+  ul
+    margin: 0
+    padding: 0
+
+  li
+    list-style-type: none
+    background: #eee
+
+  .title
+    font-weight: bold
+    width: 200px
+    text-align: right
+    display: inline-block
+    vertical-align: top
+    line-height: 30px
+    margin-right: 10px
+
+  .value
+    width: 200px
+    display: inline-block
+    vertical-align: top
+    line-height: 30px
+    
+

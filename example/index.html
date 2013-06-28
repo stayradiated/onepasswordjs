@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OnePasswordJS</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  
+  <div class="container keychain-locked">
+
+    <div class="locked">
+      <p>Using the sample keychain, the password is 'fred'</p>
+      <input class="unlock" type="password" />
+    </div>
+
+    <div class="unlocked" rules="all">
+      <header>
+        <input type="search" class="search" placeholder="Search">
+      </header>
+      <ul class="items"></ul>
+      <div class="item-info"></div>
+    </div>
+
+  </div>
+
+  <script id="item-info-template" type="text/template">
+    <h1><%= item.overview.title %></h1>
+    <% var sections = item.details.sections; %>
+    <% for (var i = 0, len_s = sections.length; i < len_s; i++) { %>
+      <% var section = sections[i]; %>
+      <% if ( section.hasOwnProperty('fields') ) { %>
+        <% var fields = section.fields; %>
+        <h3><%= section.title %></h3>
+        <ul>
+          <% for (var j = 0, len_f = fields.length; j < len_f; j++) { %>
+            <% var field = fields[j]; %>
+            <li><span class="title"><%= field.t %></span><span class="value"><%= field.v %></span></li>
+          <% } %>
+        </ul>
+      <% } %>
+    <% } %>
+  </script>
+
+  <script id="item-template" type="text/template">
+    <strong><%= item.overview.title %></strong><br>
+    <em><%= item.overview.ainfo %></em>
+  </script>
+
+  <script src="js/libs/jquery.js"></script>
+  <script src="js/libs/underscore.js"></script>
+  <script src="js/libs/backbone.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
