@@ -8,7 +8,7 @@ task 'build', 'Build project to bin', ->
 
 task 'tests', 'Run mocha tests', ->
 
-  terminal = spawn('mocha', ['tests'])
+  terminal = spawn('./node_modules/mocha/bin/mocha', ['tests'])
 
   terminal.stdout.on 'data', (data) -> console.log(data.toString())
   terminal.stderr.on 'data', (data) -> console.log(data.toString())

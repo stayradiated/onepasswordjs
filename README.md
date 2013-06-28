@@ -377,7 +377,13 @@ To compile the coffeescript into javascript use `cake`:
 Tests are written in JavaScript using [Mocha](http://visionmedia.github.com/mocha/).
 To run the tests
 
+    sudo npm install -g mocha
     mocha tests
+
+Or if you don't want to install mocha globally:
+
+    npm install .
+    cake tests
 
 License
 -------
