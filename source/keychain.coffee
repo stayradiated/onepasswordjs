@@ -41,7 +41,7 @@ class Keychain
       salt: Crypto.randomBytes(16)
       createdAt: currentTime
       updatedAt: currentTime
-      iterations: 2500
+      iterations: 10000
       profileName: 'default'
       passwordHint: ''
       lastUpdatedBy: 'Dropbox'

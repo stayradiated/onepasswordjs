@@ -75,6 +75,20 @@ Returns an empty keychain encrypted using the password specified.
     profile = keychain.exportProfile();
     console.log( profile );
 
+The `settings` parameter is an object and can overwrite any of the default
+values. However extra settings cannot be added. The default settings are:
+    
+    settings = {
+      uuid: Crypto.generateUuid(),
+      salt: Crypto.randomBytes(16),
+      createdAt: currentTime,
+      updatedAt: currentTime,
+      iterations: 10000,
+      profileName: 'default',
+      passwordHint: '',
+      lastUpdatedBy: 'Dropbox'
+    }
+
 This logs the following (indented and trimmed for readibility):
 
     var profile={
