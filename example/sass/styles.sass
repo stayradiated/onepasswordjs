@@ -40,6 +40,21 @@ header
   background: #666
   height: 50px
 
+  ul
+    margin: 0
+    padding: 0
+    float: left
+
+    li
+      float: left
+      list-style-type: none
+      line-height: 30px
+      background: #444
+      padding: 0 15px
+      color: #fff
+      margin: 10px
+      cursor: pointer
+
   input
     border: 1px solid #000
     outline: none
@@ -57,29 +72,33 @@ header
   .unlocked
     display: none
 
+
+// Item list
 .items
   margin: 10px
   width: 250px
   border: 1px solid #ccc
   height: 500px
   overflow-y: auto
-  padding: 10px
+  padding: 5px
   float: left
 
   li
     cursor: pointer
     list-style-type: none
-    width: 100%
     margin-bottom: 5px
+    padding: 5px
+    min-height: 50px
 
   li:hover
     background: #eee
 
+// Single item details
 .item-info
   float: left
-  margin: 10px
-  padding: 10px
-  width: 446px
+  margin: 10px 10px 10px 0
+  padding: 5px
+  width: 496px
   border: 1px solid #ccc
   height: 500px
   overflow-y: auto

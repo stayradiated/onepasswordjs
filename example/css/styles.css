@@ -46,6 +46,21 @@ header {
   background: #666666;
   height: 50px;
 }
+header ul {
+  margin: 0;
+  padding: 0;
+  float: left;
+}
+header ul li {
+  float: left;
+  list-style-type: none;
+  line-height: 30px;
+  background: #444444;
+  padding: 0 15px;
+  color: white;
+  margin: 10px;
+  cursor: pointer;
+}
 header input {
   border: 1px solid black;
   outline: none;
@@ -71,14 +86,15 @@ header input {
   border: 1px solid #cccccc;
   height: 500px;
   overflow-y: auto;
-  padding: 10px;
+  padding: 5px;
   float: left;
 }
 .items li {
   cursor: pointer;
   list-style-type: none;
-  width: 100%;
   margin-bottom: 5px;
+  padding: 5px;
+  min-height: 50px;
 }
 .items li:hover {
   background: #eeeeee;
@@ -86,9 +102,9 @@ header input {
 
 .item-info {
   float: left;
-  margin: 10px;
-  padding: 10px;
-  width: 446px;
+  margin: 10px 10px 10px 0;
+  padding: 5px;
+  width: 496px;
   border: 1px solid #cccccc;
   height: 500px;
   overflow-y: auto;

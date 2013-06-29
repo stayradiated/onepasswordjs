@@ -29,7 +29,7 @@
     return console.log('Keychain has been locked');
   });
 
-  keychain.load('../data/sample.cloudkeychain', function(err) {
+  keychain.load('../data/tests.cloudkeychain', function(err) {
     if (err != null) {
       return log(err);
     }
