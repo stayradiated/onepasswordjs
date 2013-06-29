@@ -247,6 +247,30 @@
       return console.log(this.hmac.toString('hex'));
     };
 
+    Item.prototype.categoryName = function() {
+      var list;
+      list = {
+        '001': 'Login',
+        '002': 'Credit Card',
+        '003': 'Secure Note',
+        '004': 'Identity',
+        '005': 'Generated Password',
+        '100': 'Software License',
+        '101': 'Bank Account',
+        '102': 'Database',
+        '103': 'Driver\'s License',
+        '104': 'Outdoor License',
+        '105': 'Membership',
+        '106': 'Passport',
+        '107': 'Reward Program',
+        '108': 'Social Security Number',
+        '109': 'Wireless Router',
+        '110': 'Server',
+        '111': 'Email Account'
+      };
+      return list[this.category];
+    };
+
     /**
      * Turn an item into a JSON object.
      * > Object - the JSON object.

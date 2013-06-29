@@ -215,6 +215,34 @@ class Item
     console.log @hmac.toString('hex')
 
 
+  # Return the category name in full
+  categoryName: ->
+    
+    list = 
+
+      # Base Categories
+      '001': 'Login'
+      '002': 'Credit Card'
+      '003': 'Secure Note'
+      '004': 'Identity'
+      '005': 'Generated Password'
+
+      # Other Categories
+      '100': 'Software License'
+      '101': 'Bank Account'
+      '102': 'Database'
+      '103': 'Driver\'s License'
+      '104': 'Outdoor License'
+      '105': 'Membership'
+      '106': 'Passport'
+      '107': 'Reward Program'
+      '108': 'Social Security Number'
+      '109': 'Wireless Router'
+      '110': 'Server'
+      '111': 'Email Account'
+
+    return list[@category]
+
   ###*
    * Turn an item into a JSON object.
    * > Object - the JSON object.
