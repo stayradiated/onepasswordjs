@@ -16,6 +16,9 @@
 
     <div class="unlocked" rules="all">
       <header>
+        <ul>
+          <li>Keychain Info</li>
+        </ul>
         <input type="search" class="search" placeholder="Search">
       </header>
       <ul class="items"></ul>
@@ -26,19 +29,35 @@
 
   <script id="item-info-template" type="text/template">
     <h1><%= item.overview.title %></h1>
-    <% var sections = item.details.sections; %>
-    <% for (var i = 0, len_s = sections.length; i < len_s; i++) { %>
-      <% var section = sections[i]; %>
-      <% if ( section.hasOwnProperty('fields') ) { %>
-        <% var fields = section.fields; %>
-        <h3><%= section.title %></h3>
-        <ul>
-          <% for (var j = 0, len_f = fields.length; j < len_f; j++) { %>
-            <% var field = fields[j]; %>
+    <em>Category: <%= item.categoryName() %></em>
+    <%
+    console.log( item );
+    if ( item.details.sections != null ) {
+      var sections = item.details.sections;
+      for (var i = 0, len_s = sections.length; i < len_s; i++) {
+        var section = sections[i];
+        if ( section.hasOwnProperty('fields') ) {
+          var fields = section.fields; %>
+          <h3><%= section.title %></h3>
+          <ul>
+          <% for (var j = 0, len_f = fields.length; j < len_f; j++) {
+            var field = fields[j]; %>
             <li><span class="title"><%= field.t %></span><span class="value"><%= field.v %></span></li>
           <% } %>
         </ul>
+      <% }
+      }
+    } else if ( item.details.fields != null ) {
+      var fields = item.details.fields; %>
+      <ul><%
+      for (var i = 0, len = fields.length; i < len; i++) {
+        var field = fields[i]; %>
+        <li><span class="title"><%= field.name %></span><span class="value"><%= field.value %></span></li>
       <% } %>
+      </ul><%
+    } else if ( item.details.notesPlain != null ) { %>
+      <h3>Notes</h3>
+      <div class="notes"><%= item.details.notesPlain %></div>
     <% } %>
   </script>
 

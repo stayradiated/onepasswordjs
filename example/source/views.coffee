@@ -31,11 +31,14 @@ Views =
 
     events:
       'keydown .locked input': 'keydown'
+      'keyup .search': 'listItems'
+      'change .search': 'listItems'
 
     initialize: (@keychain) ->
 
-      @input = $('input.unlock')
-      @table = $('.items')
+      @input   = $('input.unlock')
+      @table   = $('.items')
+      @search  = $('.search')
       @content = $('.item-info')
 
       Vent.on 'selectItem', @showItem
@@ -62,10 +65,12 @@ Views =
 
     listItems: =>
       @table.innerHTML = ''
-      @keychain.eachItem (item) =>
+      results = @keychain.findItems @search.value
+      for item in results
         item.unlock('overview')
         view = new Views.Item(model: item)
         @table.appendChild view.render().el
+      return true
 
 
 module.exports = Views

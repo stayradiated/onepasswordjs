@@ -65,7 +65,9 @@
       _Class.prototype.template = template('item-info');
 
       _Class.prototype.events = {
-        'keydown .locked input': 'keydown'
+        'keydown .locked input': 'keydown',
+        'keyup .search': 'listItems',
+        'change .search': 'listItems'
       };
 
       _Class.prototype.initialize = function(keychain) {
@@ -73,6 +75,7 @@
         this.keychain = keychain;
         this.input = $('input.unlock');
         this.table = $('.items');
+        this.search = $('.search');
         this.content = $('.item-info');
         Vent.on('selectItem', this.showItem);
         this.keychain.event.on('lock:after', function() {
@@ -105,16 +108,18 @@
       };
 
       _Class.prototype.listItems = function() {
-        var _this = this;
+        var item, results, view, _i, _len;
         this.table.innerHTML = '';
-        return this.keychain.eachItem(function(item) {
-          var view;
+        results = this.keychain.findItems(this.search.value);
+        for (_i = 0, _len = results.length; _i < _len; _i++) {
+          item = results[_i];
           item.unlock('overview');
           view = new Views.Item({
             model: item
           });
-          return _this.table.appendChild(view.render().el);
-        });
+          this.table.appendChild(view.render().el);
+        }
+        return true;
       };
 
       return _Class;
