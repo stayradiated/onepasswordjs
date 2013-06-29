@@ -111,15 +111,15 @@ class Item
 
       when 'keys'
         delete @keys
-        keysUnlocked = false
+        @keysUnlocked = false
 
       when 'details'
         delete @details
-        detailsUnlocked = false
+        @detailsUnlocked = false
 
       when 'overview'
         delete @overview
-        overviewUnlocked = false
+        @overviewUnlocked = false
 
     return this
 

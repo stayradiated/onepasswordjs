@@ -126,7 +126,6 @@
 
 
     Item.prototype.lock = function(type) {
-      var detailsUnlocked, keysUnlocked, overviewUnlocked;
       switch (type) {
         case 'all':
           this.lock('keys');
@@ -135,15 +134,15 @@
           break;
         case 'keys':
           delete this.keys;
-          keysUnlocked = false;
+          this.keysUnlocked = false;
           break;
         case 'details':
           delete this.details;
-          detailsUnlocked = false;
+          this.detailsUnlocked = false;
           break;
         case 'overview':
           delete this.overview;
-          overviewUnlocked = false;
+          this.overviewUnlocked = false;
       }
       return this;
     };
