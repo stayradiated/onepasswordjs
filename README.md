@@ -13,7 +13,7 @@ This implementation is based on the
 Currently supported:
 
 - Unlock keychain using Master Password
-- Load items from band_*.js files
+- Load items from band files
 - Unlock item overview, keys and details
 - Create keychains and items
 
@@ -22,8 +22,9 @@ Todo:
 - Find out how to calcuate the HMAC of items correctly
 - Actually do something with item data (instead of just handing back the raw
 JSON)
-- Get syncing working.
-- Add memoize pattern to opdata class to speed up item locking when no data has changed.
+- Implement syncing.
+- Add get/set methods for Items and Keychains
+- Track changes to Items, and only encrypt data when a change is made
 
 ## Installation
 
