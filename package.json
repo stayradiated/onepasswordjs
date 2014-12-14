@@ -15,7 +15,7 @@
     "onepass": "./bin/onepass"
   },
   "scripts": {
-    "test": "mocha tests"
+    "test": "mocha -R spec -t 5000 tests"
   },
   "engines": {
     "node": ">= 0.8.0"
@@ -26,9 +26,10 @@
     "keychain"
   ],
   "dependencies": {
-    "commander": "1.2.x"
+    "commander": "^2.5.0",
+    "lodash": "^2.4.1"
   },
   "devDependencies": {
-    "mocha": "1.11.x"
+    "mocha": "^2.0.1"
   }
 }

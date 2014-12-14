@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Keychain = require('../js/sharing');
+var Keychain = require('../src/sharing');
 
 describe('Shared Keychain', function() {
 

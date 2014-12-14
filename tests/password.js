@@ -1,5 +1,5 @@
 var assert = require('assert');
-var password = require('../js/password.js');
+var password = require('../src/password.js');
 
 describe('Password Generator', function() {
 

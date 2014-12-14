@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Crypto = require('../js/crypto');
+var Crypto = require('../src/crypto');
 
 describe('Crypto', function() {
 

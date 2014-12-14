@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Opdata = require('../js/opdata');
+var Opdata = require('../src/opdata');
 
 var keys = {
   encryption: new Buffer('1LsyuLnyAdLIYZbjBCJFNPDgIzh2NP+VZvh9Ty+8wBc=', 'base64'),
