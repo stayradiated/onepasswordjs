@@ -59,7 +59,7 @@ __Step 3: Get items__
 __Step 4: Decrypt item details__
 
     item = keychain.findItems( 'Facebook' )[0];
-    item.unlockDetails();
+    item.unlock('details');
     console.log( item.details );
 
 
