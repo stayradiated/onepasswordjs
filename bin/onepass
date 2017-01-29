@@ -11,198 +11,210 @@
  *
 */
 
-(function() {
+const program = require('commander')
+const inquirer = require('inquirer')
+const fs = require('fs')
+const Keychain = require('../src/keychain')
 
-  var program = require('commander');
-  var fs = require('fs');
-  var Keychain = require('../js/keychain');
-  var keychain = null;
+let keychain = null
 
-  // Save some chars
-  var log = console.log.bind(console);
+// Save some chars
+const log = console.log.bind(console)
 
-  var init = function() {
+const init = function () {
+  program
+    .version('0.2.2')
+    .option('-d, --debug', 'Run in debug mode')
+    .option('-v, --verbose', 'Display progress')
+    .option('-p, --password', 'The master password')
 
-    program
-      .version('0.2.2')
-      .option('-d, --debug', 'Run in debug mode')
-      .option('-v, --verbose', 'Display progress')
-      .option('-p, --password', 'The master password');
+  program
+    .command('open [filepath]')
+    .description('Open an existing keychain')
+    .action(fn.openKeychain)
 
-    program
-      .command('open [filepath]')
-      .description('Open an existing keychain')
-      .action(fn.openKeychain);
+  program
+    .command('create [filepath]')
+    .description('Create a new keychain')
+    .action(newKeychain)
 
-    program
-      .command('create [filepath]')
-      .description('Create a new keychain')
-      .action(newKeychain);
+  program
+    .command('migrate [in] [out]')
+    .description('Change the password for a keychain')
+    .action(fn.migrateKeychain)
 
-    program
-      .command('migrate [in] [out]')
-      .description('Change the password for a keychain')
-      .action(fn.migrateKeychain);
-
-    program.parse(process.argv);
-
-  };
+  program.parse(process.argv)
+}
 
 
-  var fn = {
-    
-    // Unlock the keychain
-    unlock: function(callback, count) {
-      if (count === undefined) count = 3;
-      program.password('Password: ', '*', function(password) {
-        if (keychain.unlock(password)) {
-          callback();
-        } else {
-          log('Incorrect password...\n');
-          if (--count > 0) fn.unlock(callback, count);
-        }
-      });
-    },
+let fn = {
 
-    // Print a list of all the items
-    showItemList: function() {
-      log('\n===== ITEMS =====');
-      keychain.eachItem(function(item) {
-        return log(' - ' +  item.overview.title);
-      });
-      return log('=================\n');
-    },
-   
-    // Print the item details
-    showItem: function(item, details) {
+  // Unlock the keychain
+  unlock (callback, count = 3) {
+    inquirer.prompt([{
+      type: 'password',
+      name: 'password',
+      message: 'Password',
+    }]).then((result) => {
+      const password = result.password
 
-      log('Category: ', item.category);
-      log(JSON.stringify(item.overview, null, 2));
-
-      // return item.calculateHmac(keychain.master.hmac);
-
-      if (details.sections != null) {
-        var sections = details.sections;
-
-        for (var i = 0, len_s = sections.length; i < len_s; i++) {
-          var section = sections[i];
-          
-          if ( section.hasOwnProperty('fields') ) {
-            var fields = section.fields;
-            log('\n=== ' + section.title + ' ===');
-
-            for (var j = 0, len_f = fields.length; j < len_f; j++) {
-              var field = fields[j];
-              log(field.t + ': ' + field.v);
-            }
-          }
-        }
-
-      } else if (details.fields != null) {
-        log('\n');
-        var fields = details.fields;
-
-        for (var i = 0, len = fields.length; i < len; i++) {
-          var field = fields[i];
-          log(field.name + ': ' + field.value);
-        }
-
-      } else if (details.notesPlain != null) {
-        log("\nNotes: " + details.notesPlain);
-
+      if (keychain.unlock(password)) {
+        callback()
       } else {
-        log(JSON.stringify(details, null, 2));
+        log('Incorrect password...\n')
+        if (--count > 0) { fn.unlock(callback, count) }
       }
+    })
+  },
 
-      return log('\n');
-    },
+  // Print a list of all the items
+  showItemList () {
+    log('\n===== ITEMS =====')
+    for (const key in keychain.items) {
+      const item = keychain.items[key]
+      return log(` - ${item.overview.title}`)
+    }
+    return log('=================\n')
+  },
 
-    search: function() {
-      program.prompt('Search for item: ', function(query) {
-        keychain.rescheduleAutoLock();
+  // Print the item details
+  showItem (item, details) {
+    log('Category: ', item.category)
+    log(JSON.stringify(item.overview, null, 2))
 
-        if (query === "list") {
-          fn.showItemList(); // List items 
-          return fn.search(); // Reload this page
-        }
+    // return item.calculateHmac(keychain.master.hmac);
 
-        results = keychain.findItems(query);
-
-        if (results.length > 0) {
-          item = results[0];
-          details = item.unlock('details');
-          fn.showItem(item, details);
-
-        } else {
-          log('Nothing found... Hint: Enter `list` to display all');
-        }
-
-        fn.search();
-      });
-    },
-
-
-    createItem:  function(keychain, callback) {
-      program.prompt({
-        title: 'Item Title: ',
-        username: 'Item Name: ',
-        password: 'Item Password: ',
-        url: 'Item URL: ',
-        notes: 'Item Notes: '
-      }, function(data) {
-        var item = Keychain.createItem(data, keychain.master, keychain.overview);
-        callback(keychain.addItem(item).exportBands());
-      });
-    },
-
-    openKeychain: function(filepath) {
-      // Set keychain
-      keychain = new Keychain().load(filepath, function() {
-        fn.unlock(function() {
-          fn.showItemList();
-          fn.search();
-        });
-      });
-      keychain.event.on('unlock', function() {
-        log('\nKeychain has been unlocked\n');
-      });
-      keychain.event.on('lock', function() {
-        log('\nLocking the Keychain\n');
-      });
-    },
-
-    migrateKeychain: function(inputFilepath, outputFilepath) {
-
-      console.log({
-        input: inputFilepath,
-        output: outputFilepath
-      });
-
+    if (details.fields != null) {
+      details.fields.forEach((field) => {
+        log(`${field.name}: ${field.value}`)
+      })
     }
 
-  };
+    if (details.sections != null) {
+      const sections = details.sections
 
-  var newKeychain = function(filepath) {
-    program.prompt({
-      password: 'Password: ',
-      hint: 'Password Hint: '
-    }, function(user) {
-      keychain = Keychain.create(user.password, user.hint);
-      fs.mkdirSync("" + filepath + "/1Password.cloudkeychain");
-      fs.mkdirSync("" + filepath + "/1Password.cloudkeychain/default");
-      fs.writeFileSync("" + filepath + "/1Password.cloudkeychain/default/profile.js", keychain.exportProfile());
-      return createItem(keychain, function(bands) {
-        var band, filename, _results;
-        _results = [];
-        for (filename in bands) {
-          band = bands[filename];
-          _results.push(fs.writeFileSync("" + filepath + "/1Password.cloudkeychain/default/" + filename, band));
+      for (var i = 0, len_s = sections.length; i < len_s; i++) {
+        const section = sections[i]
+
+        if (section.hasOwnProperty('fields')) {
+          var fields = section.fields
+          log(`\n=== ${section.title} ===`)
+
+          for (let j = 0, len_f = fields.length; j < len_f; j++) {
+            var field = fields[j]
+            log(`${field.t}: ${field.v}`)
+          }
         }
-        return _results;
-      });
-    });
-  };
+      }
+    } else if (details.fields != null) {
+      log('\n')
+      var fields = details.fields
 
-  init();
+      for (var i = 0, len = fields.length; i < len; i++) {
+        var field = fields[i]
+        log(`${field.name}: ${field.value}`)
+      }
+    } else if (details.notesPlain != null) {
+      log(`\nNotes: ${details.notesPlain}`)
+    } else {
+      log(JSON.stringify(details, null, 2))
+    }
 
-}).call(this);
+    return log('\n')
+  },
+
+  search () {
+    inquirer.prompt([{
+      message: 'Search for item:',
+      name: 'query',
+    }]).then((result) => {
+      const query = result.query
+
+      results = keychain.findItems(query)
+
+      if (results.length === 1) {
+        item = results[0]
+        details = item.unlock('details')
+        fn.showItem(item, details)
+      } else if (results.length > 1) {
+        results.forEach((item, i) => {
+          console.log(`${i + 1}. ${item.overview.title}`)
+        })
+        inquirer.prompt([{
+          message: 'Select item',
+          name: 'index',
+        }]).then(({index}) => {
+          item = results[index - 1]
+          details = item.unlock('details')
+          fn.showItem(item, details)
+        })
+      } else {
+        log('Nothing found... Hint: Enter `list` to display all')
+      }
+
+      fn.search()
+    })
+  },
+
+
+  createItem (keychain, callback) {
+    inquirer.prompt([
+      {name: 'title', message: 'Item Title:'},
+      {name: 'username', message: 'Item Name:'},
+      {name: 'password', message: 'Item Password:'},
+      {name: 'url', message: 'Item URL:'},
+      {name: 'notes', message: 'Item Notes'},
+    ]).then((data) => {
+      const item = Keychain.createItem(data, keychain.master, keychain.overview)
+      callback(keychain.addItem(item).exportBands())
+    })
+  },
+
+  openKeychain (filepath) {
+    // Set keychain
+    keychain = new Keychain().load(filepath, () => {
+      fn.unlock(() => {
+        fn.search()
+      })
+    })
+    keychain.event.on('unlock', () => {
+      log('\nKeychain has been unlocked\n')
+    })
+    keychain.event.on('lock', () => {
+      log('\nLocking the Keychain\n')
+    })
+  },
+
+  migrateKeychain (inputFilepath, outputFilepath) {
+    console.log({
+      input: inputFilepath,
+      output: outputFilepath,
+    })
+  },
+
+}
+
+let newKeychain = function (filepath) {
+  program.prompt({
+    password: 'Password: ',
+    hint: 'Password Hint: ',
+  }, (user) => {
+    keychain = Keychain.create(user.password, user.hint)
+    fs.mkdirSync(`${filepath}/1Password.cloudkeychain`)
+    fs.mkdirSync(`${filepath}/1Password.cloudkeychain/default`)
+    fs.writeFileSync(`${filepath}/1Password.cloudkeychain/default/profile.js`, keychain.exportProfile())
+    return createItem(keychain, (bands) => {
+      let band,
+        filename,
+        _results
+      _results = []
+      for (filename in bands) {
+        band = bands[filename]
+        _results.push(fs.writeFileSync(`${filepath}/1Password.cloudkeychain/default/${filename}`, band))
+      }
+      return _results
+    })
+  })
+}
+
+init()
