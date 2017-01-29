@@ -1,7 +1,7 @@
 {
   "name": "1password",
   "description": "Work With 1Password Keychains",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": "George Czabania <george@czabania.com>",
   "repository": {
     "type": "git",
