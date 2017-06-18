@@ -10,7 +10,7 @@
   "bugs": {
     "url": "http://github.com/stayradiated/onepasswordjs/issues"
   },
-  "main": "js/keychain.js",
+  "main": "src/keychain.js",
   "bin": {
     "onepass": "./bin/onepass"
   },
