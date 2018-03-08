@@ -126,7 +126,10 @@ Keychain.prototype.load = function (keychainPath, callback) {
 
   var self = this;
   fs.readdir(this.profileFolder, function (err, folderContents) {
-    if (err != null) { callback(err); }
+    if (err != null) {
+      callback(err);
+      return;
+    }
 
     var profile = null;
     var folders = null;
